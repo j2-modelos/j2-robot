@@ -7,7 +7,10 @@ class Token:
         self.driver = driver
 
     async def esperar_insercao_token(self):
-        print(f"Aguardando usuario inserir o Token PJe")
+        print(f"Recuperada página do Token PJe")
+
         await self.driver.ast().wait_for_element_visible(
             locator=(By.XPATH, '//*[@id="tokenAcessoForm"]'), timeout=300
         )
+
+        print(f"Aguardando usuario inserir o Token PJe")

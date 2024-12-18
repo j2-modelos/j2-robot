@@ -1,1 +1,2 @@
-/artifacts/j2-modelos-extension/*
+/artifacts/j2-extensao/*
+!/artifacts/j2-extensao/j2.md

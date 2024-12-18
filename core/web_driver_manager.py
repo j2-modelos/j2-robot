@@ -5,8 +5,12 @@ from webdriver_manager.chrome import ChromeDriverManager
 from pathlib import Path
 from core.assistant import Assistant
 
-CHROME_DRIVER_PATH = "../artifacts/chromedriver.exe"
-J2_EXTENSION_PATH = "../artifacts/j2-modelos-extension"
+from dotenv import load_dotenv
+import os
+
+# Carregar o arquivo .env
+load_dotenv()
+
 
 class WebDriverManager:
     drivers_abertos = []
@@ -19,14 +23,17 @@ class WebDriverManager:
         :param load_extension: Caminho para uma extensão do Chrome a ser carregada.
         :param maximize_window: Se deve maximizar a janela ao abrir o navegador.
         """
-        self.driver_path = CHROME_DRIVER_PATH
-        #self.driver_path = str(Path(CHROME_DRIVER_PATH).resolve())
-        self.load_extension = str(Path(J2_EXTENSION_PATH).resolve())
+        extensao_base_path = str(Path(os.getenv('J2_EXTENSION_PATH')).resolve())
+        extensao_versao = os.getenv('J2_EXTENSAO_VERSAO')
+
+        #self.driver_path = os.getenv('CHROME_DRIVER_PATH')
+        self.driver_path = str(Path(os.getenv('CHROME_DRIVER_PATH')).resolve())
+        self.load_extension = f'{extensao_base_path}/{extensao_versao}'
         self.maximize_window = maximize_window
         self.driver: webdriver = None
+        self.assistant: Assistant = None
         self.configure_options()
         self.start_driver()
-        self.assistant = None
         WebDriverManager.drivers_abertos.append(self)
 
     def configure_options(self):

@@ -23,9 +23,7 @@ class Login:
             self.drivermgr.driver.find_element(By.ID, "username").send_keys(username)  # Insere o usuário
             self.drivermgr.driver.find_element(By.ID, "password").send_keys(password)  # Insere a senha
             self.drivermgr.driver.find_element(By.ID, "password").send_keys(Keys.RETURN)
+            self.drivermgr.driver.switch_to.default_content()
             print("Login realizado com sucesso.")
         except Exception as e:
             print(f"Erro ao tentar logar: {e}")
-
-        sleep(10)
-        input("Pressione Enter para encerrar os navegadores...")

@@ -8,11 +8,13 @@ from pje.publico.usuario.token import Token
 async def robo():
     try:
         drivermgr = WebDriverManager(maximize_window=True).obter_ultimo_driver()
-        time.sleep(10)
+        estaPronto = await drivermgr.ast().wait_for_chrome_ready()
+        if not estaPronto:
+            raise ValueError("Google Chrome não ficou pronto.")
+
         Login(drivermgr).logarUsarioSenha("https://pje.tjma.jus.br/pje/login.seam", username="00641805306", password="a1420f5F5")
         await Token(drivermgr).esperar_insercao_token()
 
-        time.sleep(10)
         print("Conseguiu Miserávi")
 
     except Exception as e:
@@ -20,4 +22,5 @@ async def robo():
 
     finally:
         # Fechar o navegador
+        input("Concluído. Digite qualquer tecla para finalizar")
         WebDriverManager.close_all_drivers()

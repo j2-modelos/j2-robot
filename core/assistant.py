@@ -27,9 +27,9 @@ class Assistant:
         timeout = timeout or self.timeout
 
         # Wrap the condition_function to work with asyncio
-        def wrapper_condition():
+        def wrapper_condition(self_driver):
             try:
-                return condition_function(self.driver)
+                return condition_function(self_driver)
             except Exception:
                 return False
 
@@ -54,8 +54,14 @@ class Assistant:
         Returns:
             WebElement: O elemento encontrado se visível.
         """
+        # Cria a condição com o locator
         condition = EC.visibility_of_element_located(locator)
-        return await self.wait_for(condition, timeout)
+
+        # Definindo o lambda separadamente
+        def wrapper_condition(driver):
+            return condition(driver)
+
+        return await self.wait_for(wrapper_condition, timeout)
 
     async def wait_for_manual_input(self, input_locator, timeout=None):
         """
@@ -77,3 +83,29 @@ class Assistant:
 
         result = await self.wait_for(user_input_provided, timeout)
         return result
+
+    async def wait_for_chrome_ready(self, timeout=None):
+        """
+        Aguarda o navegador Chrome carregar completamente.
+
+        Args:
+            timeout (int, optional): Tempo máximo (em segundos) para aguardar.
+                                     Padrão: self.timeout.
+
+        Returns:
+            bool: Verdadeiro se o Chrome está pronto.
+        """
+        timeout = timeout or self.timeout  # Usa o timeout fornecido ou o padrão
+
+        try:
+            print("Aguardando o Chrome estar pronto...")
+            # Verificar o estado da página até que esteja "complete"
+            await self.wait_for(
+                lambda driver: driver.execute_script("return document.readyState") == "complete",
+                timeout=timeout
+            )
+            print("O Chrome está pronto!")
+            return True
+        except asyncio.TimeoutError:
+            print("Erro: O Chrome não carregou no tempo esperado.")
+            return False
