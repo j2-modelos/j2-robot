@@ -2,6 +2,7 @@ import time
 
 from core.web_driver_manager import WebDriverManager
 from pje.login import  Login
+from pje.ng2.dev import Dev
 from pje.publico.usuario.token import Token
 
 
@@ -14,13 +15,14 @@ async def robo():
 
         Login(drivermgr).logarUsarioSenha("https://pje.tjma.jus.br/pje/login.seam", username="00641805306", password="a1420f5F5")
         await Token(drivermgr).esperar_insercao_token()
+        await Dev(drivermgr).esperar_comando_usuario()
 
-        print("Conseguiu Miserávi")
+        print("Encerramento do robÔ.")
 
     except Exception as e:
         print(f"Ocorreu um erro: {e}")
 
     finally:
         # Fechar o navegador
-        input("Concluído. Digite qualquer tecla para finalizar")
         WebDriverManager.close_all_drivers()
+        print("A aplicação foi encerrada.")

@@ -1,15 +1,47 @@
 import asyncio
+import random
+import websockets
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+from utils.dom import Dom
+from utils.websocket_server_client import WebSocketServerClient
+
+
 class Assistant:
-    def __init__(self, driver, timeout=30):
+    def __init__(self, driver, timeout=None):
         """
         Inicializa a classe Assistant com um WebDriver e o timeout padrão.
         """
         self.driver = driver
         self.timeout = timeout
+        self.dom_util = Dom(driver)
+        self.ws_port = random.randint(49152, 65535)
+        self.websocket = None
+
+        asyncio.create_task(self._init_async())
+
+    async def _init_async(self):
+        """
+        Inicialização assíncrona do Assistant:
+            1 - Conecta o Assistant a um WebSocket usando a porta gerada aleatoriamente.
+
+        Returns:
+            None: Várias inicializações.
+        """
+        try:
+            await self._create_websocket_server()
+
+        except Exception as e:
+            print(f"Erro ao conectar ao WebSocket: {e}")
+
+    async def _create_websocket_server(self):
+        self.websocket = WebSocketServerClient(host='localhost', port=self.ws_port)
+        self.websocket.start()
+        print(f"Conectado ao WebSocket na porta {self.ws_port}")
+
 
     async def wait_for(self, condition_function, timeout=None):
         """
@@ -24,7 +56,7 @@ class Assistant:
         Raises:
             asyncio.TimeoutError: Se a condição não for atendida dentro do tempo limite.
         """
-        timeout = timeout or self.timeout
+        timeout = timeout or self.timeout or 86400
 
         # Wrap the condition_function to work with asyncio
         def wrapper_condition(self_driver):
@@ -42,6 +74,37 @@ class Assistant:
             return result
         except TimeoutException:
             raise asyncio.TimeoutError("The condition was not met within the specified timeout.")
+
+    async def wait_for_async(self, condition_function, timeout=None):
+        """
+        Aguarda uma condição personalizada assíncrona ser atendida.
+
+        Args:
+            condition_function (function): Função assíncrona que define a condição a ser aguardada.
+            timeout (int, optional): Tempo máximo (em segundos) para aguardar a condição. Padrão: self.timeout.
+
+        Returns:
+            O resultado da condição se atendida.
+        Raises:
+            asyncio.TimeoutError: Se a condição não for atendida dentro do tempo limite.
+        """
+        timeout = timeout or self.timeout
+
+        # Executando a condição em um loop de eventos, pois a condição é assíncrona
+        async def wrapper_condition(self_driver):
+            try:
+                # Espera o resultado assíncrono da condição
+                return await condition_function(self_driver)
+            except Exception:
+                return False
+
+        loop = asyncio.get_event_loop()
+        try:
+            # Use `asyncio.wait_for` para lidar com o timeout e aguardar a condição
+            result = await asyncio.wait_for(wrapper_condition(self.driver), timeout)
+            return result
+        except TimeoutException:
+            raise asyncio.TimeoutError("A condição não foi atendida dentro do tempo especificado.")
 
     async def wait_for_element_visible(self, locator, timeout=None):
         """

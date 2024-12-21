@@ -88,7 +88,7 @@ class WebDriverManager:
     def close_all_drivers(cls):
         # Fecha todos os drivers abertos e limpa a lista
         for driver in cls.drivers_abertos:
-            driver.quit()
+            driver.quit_driver()
         cls.drivers_abertos.clear()
 
     @classmethod
