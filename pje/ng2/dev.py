@@ -4,16 +4,22 @@ from pathlib import Path
 from core.web_driver_manager import WebDriverManager
 from selenium.webdriver.common.by import By
 
+from frontend.painel_usuario_interno_root import PainelUsuarioInterno
+
 
 class Dev:
-    def __init__(self, driver: WebDriverManager):
-        self.drivermgr = driver
+    def __init__(self, drivermgr: WebDriverManager):
+        self.drivermgr = drivermgr
+        self.ng_frame = None
+
         asyncio.create_task( self.init_async() )
 
     async  def init_async(self):
-        await self.drivermgr.ast().wait_for_element_visible(
+        self.ng_frame = await self.drivermgr.ast().wait_for_element_visible(
             locator=(By.CSS_SELECTOR, '#ngFrame'), timeout=300
         )
+        self.drivermgr.assistant.painel_usuario = PainelUsuarioInterno(self.drivermgr, self.ng_frame)
+
         with open(str(Path(__file__).parent / "dev_menu_automacao.html"), "r", encoding="utf-8") as file:
             html_injection = file.read()
         with open(str(Path(__file__).parent / "dev_menu_automacao.js"), "r", encoding="utf-8") as file:
@@ -22,8 +28,6 @@ class Dev:
                                                       position="afterbegin",
                                                       html_string=f'{html_injection}')
         self.drivermgr.assistant.dom_util.insert_script(js_injection)
-
-
 
         self._registrar_numero_porta_documento()
 
@@ -59,6 +63,25 @@ class Dev:
 
             if user_command.acao == 'robo-encerrar-aplicacao':
                 return False
+
+            if user_command.tarefa and user_command.tarefa.strip():
+                try:
+                    await  self.drivermgr.assistant.websocket.send_to_client({
+                        'acao': 'estado-lista-de-automacoes',
+                        'estado': False
+                    })
+                    await  self.drivermgr.assistant.painel_usuario.abrir_tarefa(user_command)
+                except Exception as e:
+                    # Captura qualquer exceção
+                    print(f"Ocorreu um erro: {e}")
+                finally:
+                    await  self.drivermgr.assistant.websocket.send_to_client({
+                        'acao': 'estado-lista-de-automacoes',
+                        'estado': True
+                    })
+                    return True
+
+
 
             return True
 

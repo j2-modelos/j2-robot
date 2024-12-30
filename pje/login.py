@@ -12,9 +12,9 @@ class Login:
         print("Driver configurado.")
 
     def logarUsarioSenha(self, url, username, password):
-        """Método para realizar o login usando o driver configurado"""
+        """Método para realizar o login usando o _driver configurado"""
         if not self.drivermgr:
-            print("Erro: Nenhum driver configurado.")
+            print("Erro: Nenhum _driver configurado.")
             return
         try:
             # Exemplo de login em uma página

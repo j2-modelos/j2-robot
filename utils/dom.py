@@ -1,4 +1,10 @@
+import json
+
 from selenium import webdriver
+from selenium.common import StaleElementReferenceException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+
 
 class Dom:
     def __init__(self, driver: webdriver.Chrome):
@@ -52,3 +58,74 @@ class Dom:
             self.driver.execute_script(script, script_content)
         except Exception as e:
             raise RuntimeError(f"Erro ao inserir script: {e}")
+
+    def is_element_still_in_dom(self, element: WebElement):
+        try:
+            # Tentando acessar algo no elemento (como o texto ou atributo)
+            tag_name = element.tag_name  # Apenas verificar se o acesso funciona
+            return True  # Elemento ainda está anexado ao DOM
+        except StaleElementReferenceException:
+            return False  # Elemento não está mais anexado ao DOM
+
+    def alter_inner_html(self, element, html_string):
+        """
+        Altera o conteúdo HTML de um elemento contenteditable, substituindo seu innerHTML.
+
+        :param element: O elemento cujo conteúdo HTML será alterado.
+        :param html_string: A string de HTML que substituirá o conteúdo atual do elemento.
+        """
+        try:
+            # Altera diretamente o conteúdo do innerHTML do elemento
+            self.driver.execute_script("arguments[0].innerHTML = arguments[1];", element, html_string)
+        except Exception as e:
+            raise RuntimeError(f"Erro ao alterar innerHTML: {e}")
+
+    def extract_text_as_json_from_element(self, locator=None, css_selector=None):
+        """
+        Extrai o texto de um elemento HTML localizado usando o tipo e valor do locator
+        ou um seletor CSS, e tenta convertê-lo para JSON.
+
+        :param locator: O localizador de tupla, podendo ser um tipo de localizador
+                         (como By.ID, By.CLASS_NAME, etc.) e o valor correspondente.
+                         Exemplo: (By.ID, 'element_id').
+        :param css_selector: Um seletor CSS para localizar o elemento (exclusivo
+                              se 'locator' não for fornecido).
+                         Exemplo: '.example-class'.
+        :return: O objeto JSON extraído, ou None se o texto não puder ser convertido para JSON.
+        :raises ValueError: Se nenhum dos parâmetros locator ou css_selector for fornecido.
+        :raises RuntimeError: Caso ocorra um erro ao tentar localizar o elemento ou ao converter o texto.
+
+        **Comportamento:**
+        - Se um locator for passado, ele deve ser uma tupla (tipo, valor), por exemplo:
+          - `locator = (By.ID, 'some_id')`
+          - `locator = (By.CLASS_NAME, 'some_class')`
+        - Se um `css_selector` for passado, ele será tratado como um localizador do tipo `CSS_SELECTOR`.
+        - O texto do elemento localizado será extraído e tentaremos convertê-lo para um JSON válido.
+        - Se o texto não for JSON válido, será retornado `None`.
+        """
+
+        # Verificar se locator ou css_selector foi fornecido
+        if not locator and not css_selector:
+            raise ValueError("Você deve fornecer um 'locator' ou 'css_selector'.")
+
+        # Se 'css_selector' for fornecido, construir locator
+        if css_selector:
+            locator = (By.CSS_SELECTOR, css_selector)
+
+        try:
+            # Localiza o elemento usando o tipo de localizador e o seletor fornecidos
+            element = self.driver.find_element(*locator)
+
+            # Obtém o texto do elemento
+            text_content = element.text or element.get_attribute('innerText')
+
+            # Tenta carregar o texto extraído como JSON
+            try:
+                json_data = json.loads(text_content)
+                return json_data
+            except json.JSONDecodeError:
+                print("O texto extraído não é um JSON válido.")
+                return None
+
+        except Exception as e:
+            raise RuntimeError(f"Erro ao extrair texto como JSON: {e}")
