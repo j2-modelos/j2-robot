@@ -3,7 +3,7 @@ import asyncio
 from core.web_driver_manager import WebDriverManager
 from fluxo.core.tarefa_fluxo import TarefaFluxo
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
-from utils.mensagem import Mensagem
+from model.mensagem import Mensagem
 from utils.strings import transformar_em_nome_classe
 
 
@@ -40,4 +40,3 @@ class Movimentar:
 
 
 from fluxo.tarefas.avaliar_determinacoes_do_magistrado.avaliar_determinacaoes_do_magistrado_root import AvaliarDeterminacoesDoMagistrado
-

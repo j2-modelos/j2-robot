@@ -1,11 +1,9 @@
-import pandas as pd
-
 from core.web_driver_manager import WebDriverManager
 from fluxo.core.tarefa_fluxo import TarefaFluxo
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
 from model.situacao_tarefa_enum import SituacaoTarefaEnum
 from services.resolutor_tabela_decisao import ResolutorTabelaDecisao
-from utils.mensagem import Mensagem
+from model.mensagem import Mensagem
 
 
 class ExecutorTabelaDecisao(TarefaFluxo):
@@ -60,21 +58,30 @@ class ExecutorTabelaDecisao(TarefaFluxo):
             return
 
         print("Executando medidas para decisões de identificadores: ", self.resolutor.identificadores)
-        for medida in self.medidas_a_tomar:
-            for acao, passos in medida.items():
-                # Obtendo o método dinamicamente
-                metodo_da_acao = getattr(self, acao, None)
+        try:
+            for medida in self.medidas_a_tomar:
+                for acao, passos in medida.items():
+                    # Obtendo o método dinamicamente
+                    metodo_da_acao = getattr(self, acao, None)
 
-                if callable(metodo_da_acao):  # Verifica se o método existe
-                    for passo in passos:  # Itera pelos passos
-                        await metodo_da_acao(passo)  # Passa o passo como argumento
-                else:
-                    print(f"Método '{acao}' não encontrado!")
+                    if callable(metodo_da_acao):  # Verifica se o método existe
+                        for passo in passos:  # Itera pelos passos
+                            await metodo_da_acao(passo)  # Passa o passo como argumento
+                    else:
+                        print(f"Método '{acao}' não encontrado!")
 
-        if self._resolucao_por_fallback():
-            self.situacao = SituacaoTarefaEnum.FALLBACK
-        else:
-            self.situacao = SituacaoTarefaEnum.RESOLVIDA
+            if self._resolucao_por_fallback():
+                self.situacao = SituacaoTarefaEnum.FALLBACK
+            else:
+                self.situacao = SituacaoTarefaEnum.RESOLVIDA
+        except Exception as e:
+            print(f"Erro na execução das medidas: {e}")
+            await  self._sinalizar_erro()
+            self.situacao = SituacaoTarefaEnum.FALHA
+            raise e
+    async def _sinalizar_erro(self, label_erro:str =None):
+        await  self.inserir_subetiqueta_processo(etiqueta_pai=f"[#] {self.obter_acronimo_tarefa()}",
+                                                 subetiqueta=f"[!] { label_erro if not label_erro is None else 'ERRO'}")
 
     def _resolucao_por_fallback(self):
         return True if ResolutorTabelaDecisao.rotulo_fallback_identificador in self.resolutor.identificadores else False

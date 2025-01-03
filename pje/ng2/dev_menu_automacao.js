@@ -1,8 +1,11 @@
 window.websocket = null;  // Variável global para armazenar o WebSocket ativo
 function abrirWebSocketEEnviarMensagem(mensagem) {
     debugger
+    mensagem = { ...{'estado_automacao': null, acao: null, tarefa: null}, ...mensagem}
     const liElement = event.target.closest('li');
-    if (liElement.classList.contains('disabled')) return
+    const aEleento = event.target.closest('a');
+    if ( [liElement, aEleento].some(el => el.classList.contains('disabled')))
+        return
 
     const porta = window.J2_ROBO_WEBSOCKET_PORTA
     if (!websocket || websocket.readyState === WebSocket.CLOSED) {
@@ -61,11 +64,44 @@ function tentarReconectar(mensagem) {
 }
 function estadoAutomacoes(estado) {
     // Seleciona todos os elementos <li> dentro de elementos com atributo [j2-robot]
-    const listaItens = document.querySelectorAll('[j2-robot] li');
+    const listaItens = document.querySelectorAll('[j2-robot] li:not([j2-cmd-li])');
+    const [stop, pause, play, close] = document.querySelectorAll('[j2-robot] [j2-cmd-li] a');
 
     // Itera sobre todos os itens e adiciona a classe 'disabled'
-    listaItens.forEach(function(item) {
-        item.classList[estado ? 'remove' : 'add']('disabled');
-    });
+    switch(estado){
+        case 'EstadoAutomacao.EXECUTANDO':
+            [close, play, ...listaItens].forEach(function(item) {
+                item.classList.add('disabled');
+            });
+            [stop, pause].forEach(function(item) {
+                item.classList.remove('disabled');
+            });
+            break;
+
+        case 'EstadoAutomacao.PAUSADA':
+            [close, pause, ...listaItens].forEach(function(item) {
+                item.classList.add('disabled');
+            });
+            [stop, play].forEach(function(item) {
+                item.classList.remove('disabled');
+            });
+            break;
+
+        case 'EstadoAutomacao.PARADA':
+            [close, play, stop, ...listaItens].forEach(function(item) {
+                item.classList.add('disabled');
+            });
+            break;
+
+        case 'EstadoAutomacao.NAO_INICIADA':
+            [close, ...listaItens].forEach(function(item) {
+                item.classList.remove('disabled');
+            });
+            [close, play, stop].forEach(function(item) {
+                item.classList.add('disabled');
+            });
+            break;
+    }
+
 }
 console.log('dev.seam: script do menu de automação foi devidamente carregado')

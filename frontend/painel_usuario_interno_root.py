@@ -1,11 +1,9 @@
-from time import sleep
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 from core.web_driver_manager import WebDriverManager
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
-from utils.mensagem import Mensagem
+from model.mensagem import Mensagem
 
 
 class PainelUsuarioInterno:
@@ -39,6 +37,8 @@ class PainelUsuarioInterno:
             locator=(By.XPATH, xpath))
         self.drivermgr.assistant.clicar_elemento(tarefa)
 
-        await  ListaProcessosTarefa(self.drivermgr, mensagem, self.ng_frame).iterar_cards_pendentes()
+        lista_processos_tarefa = ListaProcessosTarefa(self.drivermgr, mensagem, self.ng_frame)
+        await lista_processos_tarefa.exibir_aba_processos()
+        await lista_processos_tarefa.iterar_cards_pendentes()
 
         print('Ação executada')

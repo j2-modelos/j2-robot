@@ -1,3 +1,5 @@
+import os
+
 from selenium import webdriver
 import time
 import json
@@ -6,7 +8,9 @@ import json
 class EtiquetaServico:
     def __init__(self, driver):
         self._driver = driver
-        self.base_url = "https://pje.tjma.jus.br/pje/seam/resource/rest/pje-legacy/painelUsuario"
+
+        web_root = os.getenv('PJE_PAYLOAD_WEB_ROOT')
+        self.base_url = f"{web_root}/seam/resource/rest/pje-legacy/painelUsuario"
 
     def execute_fetch(self, endpoint, method='GET', body=None, headers=None):
         url = self.base_url + endpoint  # Concatenando o endpoint com a URL base
@@ -55,7 +59,7 @@ class EtiquetaServico:
             resposta_fetch = self.pesquisar_etiquetas(etiqueta_pai)
             etiqueta_pai_entity = next((e for e in resposta_fetch['entities'] if e['nomeTagCompleto'] == etiqueta_pai), None)
             if etiqueta_pai_entity is None:
-                raise "A etiqueta pai precisa existir antes de criar a subetiqueta"
+                raise Exception("A etiqueta pai precisa existir antes de criar a subetiqueta")
 
             nova_etiqueta_entity = self.execute_fetch("/tags", method='POST', body={
                 "id": None,

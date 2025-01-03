@@ -1,7 +1,7 @@
 import json
 
 from selenium import webdriver
-from selenium.common import StaleElementReferenceException
+from selenium.common import StaleElementReferenceException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -66,6 +66,21 @@ class Dom:
             return True  # Elemento ainda está anexado ao DOM
         except StaleElementReferenceException:
             return False  # Elemento não está mais anexado ao DOM
+
+    def element_exist_in_dom(self, css_selector=None, xpath_selector=None, locator=None):
+        if locator is None and css_selector is None and xpath_selector is None:
+            raise Exception("Um dos parâmetros deve ser estabelecido.")
+
+        if css_selector:
+            locator=(By.CSS_SELECTOR, css_selector)
+        if xpath_selector:
+            locator=(By.XPATH, xpath_selector)
+
+        try:
+            self.driver.find_element(*locator)
+            return True
+        except NoSuchElementException:
+            return False
 
     def alter_inner_html(self, element, html_string):
         """

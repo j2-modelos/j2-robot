@@ -1,12 +1,12 @@
 import asyncio
 import random
 from time import sleep
-from typing import List
+from typing import Any, List, Tuple, Awaitable, Union
 from urllib.parse import urlparse, parse_qs
 
 import websockets
 from pycparser.c_ast import Return
-from selenium.webdriver import ActionChains
+from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
 from model.driver_guia import DriverGuia
+from model.estado_automacao_enum import EstadoAutomacao
 from utils.dom import Dom
 from utils.websocket_server_client import WebSocketServerClient
 
@@ -31,6 +32,8 @@ class Assistant:
         self.guias_abertas: List[DriverGuia] = []
         self.websocket = None
         self.painel_usuario = None
+        self.action = ActionChains(driver)
+        self.estado_automacao = EstadoAutomacao.NAO_INICIADA
 
         self.guias_abertas.append(DriverGuia('guia-principal-aplicacao', self.driver.current_window_handle))
 
@@ -89,36 +92,55 @@ class Assistant:
         except TimeoutException:
             raise asyncio.TimeoutError("The condition was not met within the specified timeout.")
 
-    async def wait_for_async(self, condition_function, timeout=None):
+    async def wait_for_async(self, condition_function, timeout=None, admissible_exceptions=None):
         """
         Aguarda uma condição personalizada assíncrona ser atendida.
 
         Args:
-            condition_function (function(_driver)): Função assíncrona que define a condição a ser aguardada.
-            timeout (int, optional): Tempo máximo (em segundos) para aguardar a condição. Padrão: self.timeout.
+            async condition_function (function(_driver)): Função assíncrona que define a condição a ser aguardada.
+            timeout (float, optional): Tempo máximo (em segundos) para aguardar a condição. Padrão: self.timeout.
+            admissible_exceptions (tuple, optional): Exceções que são esperadas e devem ser tratadas como falha normal da condição.
 
         Returns:
-            O resultado da condição se atendida.
+            True, como resultado da condição quando atendida.
         Raises:
             asyncio.TimeoutError: Se a condição não for atendida dentro do tempo limite.
         """
-        timeout = timeout or self.timeout
+        timeout = timeout or self.timeout or float('inf')
+        if admissible_exceptions is None:
+            admissible_exceptions = ()  # Define como uma tupla vazia se não especificado
+        start_time = asyncio.get_event_loop().time()
 
-        # Executando a condição em um loop de eventos, pois a condição é assíncrona
         async def wrapper_condition(self_driver):
             try:
                 # Espera o resultado assíncrono da condição
                 return await condition_function(self_driver)
-            except Exception:
+            except admissible_exceptions:  # Captura apenas as exceções admissíveis
                 return False
+            except Exception as e:
+                raise e  # Relança outras exceções
 
-        loop = asyncio.get_event_loop()
-        try:
-            # Use `asyncio.wait_for` para lidar com o timeout e aguardar a condição
-            result = await asyncio.wait_for(wrapper_condition(self.driver), timeout)
-            return result
-        except TimeoutException:
-            raise asyncio.TimeoutError("A condição não foi atendida dentro do tempo especificado.")
+        while True:
+            elapsed_time = asyncio.get_event_loop().time() - start_time
+            remaining_time = timeout - elapsed_time
+
+            # Se o tempo já passou, levantamos o erro de timeout
+            if remaining_time <= 0:
+                raise asyncio.TimeoutError("A condição não foi atendida dentro do tempo especificado.")
+
+            # Espera pela condição com o tempo restante
+            try:
+                result = await asyncio.wait_for(wrapper_condition(self.driver), remaining_time)
+                if result:  # Se a condição for atendida
+                    return True
+            except asyncio.TimeoutError:
+                raise asyncio.TimeoutError("A condição não foi atendida dentro do tempo especificado.")
+            except Exception as e:
+                # Opcional: log de exceção ou re-encaminhamento
+                raise e
+
+            # Aguarda um pequeno intervalo antes de tentar novamente, caso necessário
+            await asyncio.sleep(0.1)
 
     async def wait_for_element_visible(self, locator=None, css_selector=None, timeout=None):
         """
@@ -219,10 +241,11 @@ class Assistant:
         # Verificar se locator ou css_selector foi fornecido
         if not locator and not css_selector:
             raise ValueError("Você deve fornecer um 'locator' ou 'css_selector'.")
+        if css_selector:
+            locator=(By.CSS_SELECTOR, css_selector)
 
         by, value = locator
         return self.driver.find_element(by, value)
-        return
 
     async def wait_for_manual_input(self, input_locator, timeout=None):
         """
@@ -280,13 +303,21 @@ class Assistant:
             elemento = self.find_element(locator=locator)
 
         try:
-            actions = ActionChains(self.driver)
+            actions = self.action
             actions.move_to_element(elemento)
             actions.click(elemento)
             actions.perform()
         except :
             print('Erro não interagível ocorreu.')
             self.driver.execute_script("arguments[0].click();", elemento)
+
+    def scroll_intoview(self, elemento: WebElement):
+        self.driver.execute_script("""
+            arguments[0].scrollIntoView({
+                behavior: 'smooth', 
+                block: 'nearest'
+            });
+        """, elemento)
 
     async def wait_for_element_not_more_in_dom(self, element: WebElement, timeout=None):
         """
@@ -302,7 +333,7 @@ class Assistant:
         Raises:
             asyncio.TimeoutError: Se o elemento continuar no DOM após o tempo limite.
         """
-        timeout = timeout or self.timeout or 86400  # Timeout padrão de 24h, caso não seja especificado
+        timeout = timeout or self.timeout or float("inf")  # Timeout padrão de 24h, caso não seja especificado
 
         def element_removed_from_dom(driver):
             return not self.dom_util.is_element_still_in_dom(element)
@@ -361,4 +392,65 @@ class Assistant:
         param1_value = query_params.get(parametro, [None])[0]
         return str(param1_value)
 
+    async def obter_url_frame_ativo(self):
+        current_url = self.driver.execute_script("return window.location.href")
+        return current_url
 
+    async def wait_race(
+            self,
+            tasks: List[Union[Awaitable[Any], Tuple[Awaitable[Any], Any]]],
+            timeout=None
+    ) -> Tuple[Any, Awaitable[Any], Any]:
+        """
+        Espera pela primeira tarefa a ser concluída entre várias fornecidas.
+
+        Args:
+            tasks (List[Union[Awaitable[Any], Tuple[Awaitable[Any], Any]]]):
+                Uma lista de corrotinas/tarefas assíncronas ou tuplas (corrotina, valor adicional).
+            timeout (float, optional): Tempo limite para aguardar a conclusão.
+
+        Returns:
+            Tuple[Any, Awaitable[Any], Any]:
+                O resultado da primeira tarefa concluída, a própria tarefa correspondente,
+                e o valor adicional associado (ou None se não for uma tupla).
+        """
+        timeout = timeout or self.timeout or float("inf")
+
+        # Preparar a lista de tarefas no formato padrão (future, extra_value)
+        prepared_tasks = [
+            (asyncio.create_task(task) if isinstance(task, Awaitable) else asyncio.create_task(task[0]), task[1] if isinstance(task, tuple) else None)
+            for task in tasks
+        ]
+
+        # Mapear as tarefas para asyncio
+        tasks_to_wait = [pair[0] for pair in prepared_tasks]
+
+        # Espera pelas tarefas
+        done, pending = await asyncio.wait(tasks_to_wait, return_when=asyncio.FIRST_COMPLETED, timeout=timeout)
+
+        # Cancela as tarefas pendentes
+        for task in pending:
+            task.cancel()
+
+        # Selecionar a primeira completada
+        first_done = next(iter(done))
+        result = first_done.result()
+
+        # Associar valor extra, se houver
+        extra_value = None
+        for future, value in prepared_tasks:
+            if future == first_done:
+                extra_value = value
+                break
+
+        return result, first_done, extra_value
+
+    def campo_limpar_e_escrever(self, campo: WebElement, texto_escrever: str):
+        (self.action
+         .move_to_element(campo)
+         .key_down(Keys.SHIFT).send_keys(Keys.HOME).key_up(Keys.SHIFT)
+         .send_keys(Keys.DELETE)
+         .send_keys(texto_escrever)
+         .send_keys(Keys.RETURN)
+         .perform()
+         )

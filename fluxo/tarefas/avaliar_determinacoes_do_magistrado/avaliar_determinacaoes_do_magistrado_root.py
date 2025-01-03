@@ -1,18 +1,15 @@
-import random
 import uuid
 from pathlib import Path
 from string import Template
-from struct import pack_into
 from time import sleep
-
-from selenium.webdriver.common.by import By
 
 from chatgpt.chatgpt import ChatGpt
 from core.web_driver_manager import WebDriverManager
 from fluxo.core.executor_tabela_decisao import ExecutorTabelaDecisao
 from fluxo.tarefas.classes.avaliacao_multi_selecao import AvaliarMultiSelecao
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
-from utils.mensagem import Mensagem
+from model.j2_robot_erro import J2RobotErro
+from model.mensagem import Mensagem
 
 
 class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisao):
@@ -30,6 +27,8 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
 
 
     async def tarefa_esta_pronta(self):
+        if self.esta_pronta:
+            return
         #carregar guia chatgpt ou reutilizar
         await super().tarefa_esta_pronta()
         self.chatgpt  = ChatGpt(drivermgr=self.drivermgr, guia_compartilhada=True)
@@ -38,24 +37,33 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
 
     async  def realizar_tarefa(self):
         await self.tarefa_esta_pronta()
+        self.esta_pronta = True
         await super().realizar_tarefa()
         #aqui poderia ser encadeado uma outra tarefa de fluxo??????????
 
         ato_judicial = self.obter_teor_ato_judicial_para_prompt()
         gen_uuid = str(uuid.uuid1())
+        ato_uuid = self.obter_uuid_ato_judicial() or "[inexistente]"
 
         with open(str(Path(__file__).parent / 'avaliar_determinacoes_do_magistrado_prompt.html'), "r", encoding="utf-8") as arquivo:
             prompt = Template(arquivo.read())
 
         dados = {
-            "atojudicial": ato_judicial,
-            "guid": gen_uuid,
+            "ato_judicial": ato_judicial,
+            "uuid": gen_uuid,
+            "ato_uuid": ato_uuid
         }
         prompt = prompt.substitute(dados)
+        chat_name = f"{self.obter_acronimo_tarefa()} {self.numero_processo or "XXXXXXX-XX.XXXX.X.XX.XXXX"}"
 
-        await self.chatgpt.alternar()
-        await self.chatgpt.inserir_prompt(prompt)
-        resposta_json = await self.chatgpt.aguardar_resposta(gen_uuid)
+        try:
+            await self.chatgpt.iniciar_novo_chat(chat_name)
+            await self.chatgpt.inserir_prompt(prompt)
+            resposta_json = await self.chatgpt.aguardar_resposta(gen_uuid)
+        except J2RobotErro as e:
+            if e.codigo_erro == 7:
+                await  self._sinalizar_erro("CHAT GPT ERRO")
+            raise e
 
         print("A resposta do chatgpt foi:")
         print(resposta_json)
@@ -67,27 +75,7 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
         self.json_para_analise = resposta_json
 
         self.decidir()
-        await self.executar_medidas_a_tomar()
         await self._sinalizar_automacao()
+        await self.executar_medidas_a_tomar()
 
         return self.situacao
-
-    def obter_teor_ato_judicial_para_prompt(self):
-        try:
-            # Localizar o elemento pelo seletor CSS e obter o texto
-            elemento = self.drivermgr.driver.find_element(By.CSS_SELECTOR, "#paginaInteira")
-            texto_completo = elemento.text
-
-            # Encontrar a última ocorrência da palavra 'dispositivo' no texto
-            palavra = "dispositivo"
-            indice = texto_completo.lower().rfind(palavra)
-
-            if indice != -1:
-                # Extrair o conteúdo do índice da última palavra até o final
-                texto_extraido = texto_completo[indice + len(palavra):].strip()
-                return texto_extraido
-            else:
-                # Se a palavra não foi encontrada, retorna os últimos 5000 caracteres (se houver)
-                return texto_completo[-5000:] if len(texto_completo) > 5000 else texto_completo
-        except Exception as e:
-            return f"Erro ao tentar processar o texto: {e}"

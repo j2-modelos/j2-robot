@@ -1,25 +1,33 @@
 
 
-<li class="icone-menu-abas dropdown drop-menu" style="line-height: 34px;" j2-robot>
-    <a href="#" class="btn-menu-abas dropdown-toggle"
+<li class="icone-menu-abas dropdown drop-menu" style="line-height: 34px;" j2-robot id="j2-robot">
+    <a href="javascript: return;" class="btn-menu-abas dropdown-toggle"
        title="Menu" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true"
        style="height: 52px;">
         <i class="fa fa-cubes" style="font-size: 26px;"></i>
         <span class="sr-only">Ícone de automação</span>
     </a>
     <ul class="dropdown-menu multi-level" style="background-color: white;">
-        <li class="" style="display: flex;">
-            <a tabindex="1" href="javascript: return;">
+        <li class="" style="display: flex;" j2-cmd-li>
+            <a tabindex="1" href="javascript: return;" j2-robot-stop class="disabled" onclick="abrirWebSocketEEnviarMensagem({
+                    estado_automacao: 'EstadoAutomacao.PARADA',
+                    acao: 'modificar-estado-automacao'
+               })">
                 <i class="fa fa-stop"></i>
             </a>
-            <a tabindex="1" href="javascript: return;">
+            <a tabindex="1" href="javascript: return;" j2-robot-pause class="disabled" onclick="abrirWebSocketEEnviarMensagem({
+                    estado_automacao: 'EstadoAutomacao.PAUSADA',
+                    acao: 'modificar-estado-automacao'
+               })">
                 <i class="fa fa-pause"></i>
             </a>
-            <a tabindex="1" href="javascript: return;">
+            <a tabindex="1" href="javascript: return;" j2-robot-play class="disabled" onclick="abrirWebSocketEEnviarMensagem({
+                    estado_automacao: 'EstadoAutomacao.EXECUTANDO',
+                    acao: 'modificar-estado-automacao'
+               })">
                 <i class="fa fa-play"></i>
             </a>
-            <a tabindex="1" href="javascript: return;" onclick="abrirWebSocketEEnviarMensagem({
-                    tarefa: null,
+            <a tabindex="1" href="javascript: return;" j2-robot-close onclick="abrirWebSocketEEnviarMensagem({
                     acao: 'robo-encerrar-aplicacao'
                })">
                 <i class="fa fa-close"></i>

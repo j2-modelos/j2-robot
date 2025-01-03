@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class Mensagem:
     acao: str
     tarefa: str
+    estado_automacao: str
 
 def from_json(json_str):
     try:

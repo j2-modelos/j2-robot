@@ -3,10 +3,11 @@ import json
 import pandas as pd
 
 class ResolutorTabelaDecisao:
-    rotulo_medida_encerramento_loop_avaliacao = "encerra_decisao"
+    rotulo_controle_encerramento_loop_avaliacao = "encerra_decisao"
     rotulo_marcador_identificacao = "identificacao"
     rotulo_fase_avaliacao = "avaliacao"
     rotulo_fase_acao = "acao"
+    rotulo_fase_controle = "controle"
     rotulo_fallback = "fallback"
     rotulo_fallback_identificador = "FALB"
 
@@ -72,7 +73,9 @@ class ResolutorTabelaDecisao:
                         if cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_marcador_identificacao:
                             identificacao_decisao = corpo_celula_valor
                             break
-                        elif cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_avaliacao or cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_acao:
+                        elif (cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_avaliacao
+                              or cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_acao
+                              or cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_controle):
                             fase = cabecalho_celula_valor
                         else:
                             if fase == ResolutorTabelaDecisao.rotulo_fase_avaliacao:
@@ -93,24 +96,29 @@ class ResolutorTabelaDecisao:
                                 if decidido_executar_acao or eh_fallback:
                                     if not pd.isna(cabecalho_celula_valor):
                                         print(f"{"=>" * 50 }Ação será tomada: {cabecalho_celula_valor}: {corpo_celula_valor}")
-                                        if cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_medida_encerramento_loop_avaliacao \
-                                                and corpo_celula_valor == True:
-                                            medida_encerramento_encontrada = True
-                                        else:
-                                            for acao in medidas_a_tomar:
-                                                if cabecalho_celula_valor in acao:
-                                                    acao[cabecalho_celula_valor].append( corpo_celula_valor_original )
-                                                    break
-                                            else:
-                                                nova_acao = {cabecalho_celula_valor: [corpo_celula_valor_original]}
-                                                medidas_a_tomar.append(nova_acao)
 
-                                            if (decidido_executar_acao or eh_fallback) and not identificacao_decisao.upper() in identificadores_decisao:
-                                                identificadores_decisao.append(identificacao_decisao.upper())
+
+                                        for acao in medidas_a_tomar:
+                                            if cabecalho_celula_valor in acao:
+                                                acao[cabecalho_celula_valor].append( corpo_celula_valor_original )
+                                                break
+                                        else:
+                                            nova_acao = {cabecalho_celula_valor: [corpo_celula_valor_original]}
+                                            medidas_a_tomar.append(nova_acao)
+
+                                        if (decidido_executar_acao or eh_fallback) and not identificacao_decisao.upper() in identificadores_decisao:
+                                            identificadores_decisao.append(identificacao_decisao.upper())
 
                                 else:
                                     deve_continuar_proxima_avaliacao = True
                                     break
+                            elif fase == ResolutorTabelaDecisao.rotulo_fase_controle:
+                                if ( decidido_executar_acao
+                                and cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_controle_encerramento_loop_avaliacao
+                                and corpo_celula_valor == True):
+                                    medida_encerramento_encontrada = True
+                                    print(
+                                        f"{"=>" * 50}Controle realizado: {cabecalho_celula_valor}: {corpo_celula_valor}")
                             else:
                                 raise "Condição não esperada ocorrida"
 
@@ -119,11 +127,16 @@ class ResolutorTabelaDecisao:
                             analise_json_reconstrucao = None
                             continue
 
-                        decidido_executar_acao = decidido_executar_acao and analise_json_reconstrucao == corpo_celula_valor
+                        if isinstance(corpo_celula_valor, str):
+                            valores_criterio_avaliacao = corpo_celula_valor.split(";") if isinstance(corpo_celula_valor, str) else corpo_celula_valor
+                            decidido_executar_acao = decidido_executar_acao and (analise_json_reconstrucao in valores_criterio_avaliacao)
+                        else:
+                            decidido_executar_acao = decidido_executar_acao and analise_json_reconstrucao == corpo_celula_valor
+
                         analise_json_reconstrucao = None
 
                     # Exibir os valores
-                    print(f"Corpo: {corpo_celula_valor}, Cabeçalho: { " + ".join(valores_cabecalhos)}")
+                    print(f"Fase: {fase} | Corpo: {corpo_celula_valor} | Cabeçalho: { " + ".join(valores_cabecalhos)}")
 
                 print("-" * 30)
                 if medida_encerramento_encontrada:
@@ -161,7 +174,11 @@ class ResolutorTabelaDecisao:
 
 if __name__ == "__main__":
     #Ler o arquivo Excel. Substitua 'arquivo.xlsx' pelo caminho do seu arquivo Excel.
-    caminho_tabela = 'C:/Dev/j2-robot/fluxo/tarefas/avaliar_determinacoes_do_magistrado/avaliar_determinacoes_do_magistrado_tabela_decisao.xlsx'
+    depuracao = False
+    if not depuracao:
+        caminho_tabela = 'C:/Dev/j2-robot/fluxo/tarefas/avaliar_determinacoes_do_magistrado/avaliar_determinacoes_do_magistrado_tabela_decisao.xlsx'
+    else:
+        caminho_tabela = 'C:/Dev/j2-robot/fluxo/tarefas/avaliar_determinacoes_do_magistrado/avaliar_determinacoes_do_magistrado_tabela_decisao_depuracao.xlsx'
     resolutor = ResolutorTabelaDecisao(caminho_tabela=caminho_tabela, json_niveis=3, precisa_transpor=True)
 
 
@@ -170,24 +187,33 @@ if __name__ == "__main__":
         """
         
 {
-  "json_guid": "334956c7-c617-11ef-9d20-00e04cd1067f",
-  "o_tipo_do_ato_judicial_eh": "despacho",
-  "se_for_despacho": {
-    "determina_inicio_da_fase_de_execucao_judidcial": false,
-    "determina_que_uma_audiencia_de_conciliacao_deve_ser_realizada_no_processo": false,
-    "determina_que_a_parte_comprove_o_seu_interesse_de_agir_mediante_tentativa_de_solucao_anterior": false,
-    "se_determina_a_emenda_da_peticao_inicial_no_prazo_15_dias": {
-      "sim_determina": false,
-      "determina_retornar_autos_para_decisao_urgencia_ou_decisao_liminar": false
-    }
+  "json_uuid": "$uuid",
+  "ato_judicial_uuid": "$ato_uuid",
+  "o_tipo_do_ato_judicial_eh": "sentenca",
+  "se_for_sentenca": {
+    "julgamento_com_merito": true,
+    "julgamento_sem_merito": false,
+    "ha_uma_obrigacao_de_fazer_a_ser_cumprida": {
+      "sim_ha": true,
+      "a_obrigacao_de_fazer_esta_no_mesmo_paragrafo_que_ha_confirmacao_de_liminar": false
+    },
+    "eh_uma_homolocao_de_acordo": false,
+    "determina_se_deve_ser_expedido_algum_oficio_judicial_a_uma_outra_autoridade": false
   },
-  "existe_determinacao_para_incluir_ou_retirar_partes_do_processo": false
+  "se_for_despacho": {},
+  "se_for_decisao": {},
+  "determina_apenas_a_intimacao_de_partes_no_processo": true,
+  "existe_determinacao_para_incluir_ou_retirar_partes_do_processo": false,
+  "existe_determinacao_para_arquivar_o_processo": true,
+  "a_classe_do_processo_eh": "procedimento do juizado especial civel",
+  "houve_decretacao_revelia": false
 }
 
-        
         
         """
     )
 
-
-    resolutor.decidir(analise_json)
+    try:
+        resolutor.decidir(analise_json)
+    except Exception as e:
+        print(e)

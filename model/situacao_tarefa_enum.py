@@ -7,3 +7,4 @@ class SituacaoTarefaEnum(Enum):
     NAO_RESOLVIDA = "SituacaoTarefaEnum.NAO_RESOLVIDA"
     RESOLVIDA = "SituacaoTarefaEnum.RESOLVIDA"
     FALLBACK = "SituacaoTarefaEnum.FALLBACK"
+    FALHA="SituacaoTarefaEnum.FALHA"

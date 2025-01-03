@@ -1,36 +1,46 @@
     <p>ATO JUDICIAL INICIO
-</p><p>$atojudicial
+</p><p contenteditable>$ato_judicial
 </p><p>ATO JUDICIAL FIM
 </p><p>
 </p><p>
 </p><p>Com base no teor do julgamento acima, me responda os critérios na forma do json abaixo:
 </p><p>
 </p><p>{
-</p><p>  json_guid: "$guid"
-</p><p>  o_tipo_do_ato_judicial_eh: "sentenca" ou "despacho" ou "decisao"
-</p><p>  se_for_sentenca: {
-</p><p>    julgamento_com_merito: true ou false,
-</p><p>    julgamento_sem_merito: true ou false,
-</p><p>    ha_uma_obrigacao_de_fazer_a_ser_cumprida: true ou false,
-</p><p>    determina_se_deve_ser_expedido_algum_oficio_judicial_a_uma_outra_autoridade: true ou false,
-</p><p>  },
-</p><p>  se_for_despacho: {
-</p><p>    determina_inicio_da_fase_de_execucao_judidcial: true ou false,
-</p><p>    determina_que_uma_audiencia_de_conciliacao_deve_ser_realizada_no_processo: true ou false,
-</p><p>    determina_que_a_parte_comprove_o_seu_interesse_de_agir_mediante_tentativa_de_solucao_anterior: true ou false
-</p><p>    se_determina_a_emenda_da_peticao_inicial_no_prazo_15_dias : {
-</p><p>      sim_determina: true ou false,
-</p><p>      determina_retornar_autos_para_decisao_urgencia_ou_decisao_liminar : true ou false,
-</p><p>    },
-</p><p>  },
-</p><p>  se_for_decisao: {
-</p><p>    decisao_recebeu_um_recurso_com_ou_sem_efeito_suspensivo: true ou false,
-</p><p>    decisao_diz_respeito_concessao_ou_nao_de_uma_tutela_provisoria: true ou false
-</p><p>  },
-</p><p>  existe_determinacao_para_incluir_ou_retirar_partes_do_processo: true ou false
+   <br>&nbsp;&nbsp;json_uuid: "$uuid",
+   <br>&nbsp;&nbsp;ato_judicial_uuid: "$ato_uuid",
+   <br>&nbsp;&nbsp;o_tipo_do_ato_judicial_eh: "sentenca" ou "despacho" ou "decisao",
+   <br>&nbsp;&nbsp;se_for_sentenca: {
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;julgamento_com_merito: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;julgamento_sem_merito: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;ha_uma_obrigacao_de_fazer_a_ser_cumprida: {
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sim_ha: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a_obrigacao_de_fazer_esta_no_mesmo_paragrafo_que_ha_confirmacao_de_liminar: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;},   
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;eh_uma_homolocao_de_acordo: true ou false,   
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;determina_se_deve_ser_expedido_algum_oficio_judicial_a_uma_outra_autoridade: true ou false,
+   <br>&nbsp;&nbsp;},
+   <br>&nbsp;&nbsp;se_for_despacho: {
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;determina_inicio_da_fase_de_execucao_judidcial: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;determina_que_uma_audiencia_de_conciliacao_deve_ser_realizada_no_processo: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;determina_que_a_parte_comprove_o_seu_interesse_de_agir_mediante_tentativa_de_solucao_anterior: true ou false
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;se_determina_a_emenda_da_peticao_inicial_no_prazo_15_dias : {
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sim_determina: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;determina_retornar_autos_para_decisao_urgencia_ou_decisao_liminar : true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;},
+   <br>&nbsp;&nbsp;},
+   <br>&nbsp;&nbsp;se_for_decisao: {
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;decisao_recebeu_um_recurso_com_ou_sem_efeito_suspensivo: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;decisao_diz_respeito_concessao_ou_nao_de_uma_tutela_provisoria: true ou false,
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;decisao_diz_respeito_a_embargos_de_declaracao: true ou false
+   <br>&nbsp;&nbsp;},
+   <br>&nbsp;&nbsp;determina_apenas_a_intimacao_de_partes_no_processo: true ou false,   
+   <br>&nbsp;&nbsp;existe_determinacao_para_incluir_ou_retirar_partes_do_processo: true ou false,
+   <br>&nbsp;&nbsp;existe_determinacao_para_arquivar_o_processo: true ou false,   
+   <br>&nbsp;&nbsp;a_classe_do_processo_eh: uma string em lower case,
+   <br>&nbsp;&nbsp;houve_decretacao_revelia: true ou false
 </p><p>}
 </p><p>
-</p><p>Por favor, não me responda nada além do json, gentileza. O valor de json_guid você não precisa modificar.
+</p><p>Por favor, não me responda nada além do json, gentileza, nenhum comentário adicional. Qualquer esclarecimento, eu pedirei numa pergunta posterior. O valor de json_guid você não precisa modificar.
 </p><p>
     Observe que nem todas as chaves "se_for_sentenca", "se_for_despacho", "se_for_decisao", precisa ser preeenchiada.
     Preencha apenas caso se combinar com o valor da chave "o_tipo_do_ato_judicial_eh". Por exemplo, se o tipo for resolvido como
@@ -40,10 +50,33 @@
     fala diretamente a respeito do instituto do interesse de agir que deve estar declarado pelo magistrado no ato judicial.
     Esse item fala a respeito de que o polo ativo da ação deve demonstrar que procurou por meios de solução administrativa.
 </p><p>
-        Sobre a chave "existe_determinacao_para_incluir_ou_retirar_partes_do_processo"
-        Se houver uma determinação expressa de citação de uma parte, não considere o seu valor como verdadeiro.
-        Incluir ou retirar partes diz mais respeito de dar baixa ou pedir formalmente que a quantidade formalizada nos polos ativos ou passivo
-        da ação seja modificada. Comumente o juiz pode usar os verbos "incluir" ou "excluir" ou seus sinônimos.
+    Sobre a chave "existe_determinacao_para_incluir_ou_retirar_partes_do_processo"
+    Se houver uma determinação expressa de citação de uma parte, não considere o seu valor como verdadeiro.
+    Incluir ou retirar partes diz mais respeito de dar baixa ou pedir formalmente que a quantidade formalizada nos polos ativos ou passivo
+    da ação seja modificada. Comumente o juiz pode usar os verbos "incluir" ou "excluir" ou seus sinônimos.
 </p><p>
-        Sobre a chave "ha_uma_obrigacao_de_fazer_a_ser_cumprida"
-    </p>
+    Sobre a chave "ha_uma_obrigacao_de_fazer_a_ser_cumprida", podemos depreender que toda determinação em sentença do juizo
+    seja uma obrigação a ser cumprida pela parte. Contudo, o que precisas avaliar se o juiz determina textualmente que há
+    obrigação de fazer a ser cumprida pelo ato judicial. O juiz determinará essa obrigação textualmente através do uso da
+    expressão "obrigação de fazer" ou seus sinônimos em sua ordem judicial.
+</p><p>
+    Sobre a chave "a_classe_do_processo_eh", ele deve ser encontrada próximo ao cabeçalho do ato judicial, onde se encontra o
+    número do processo e as partes que compõe o processo. Caso não consiga localizar, o valor você deixará reservado como
+    "[não localizado]". O valor deverá estar todas em mínúsculas, respeitados os caracteres diacríticos que existirem.
+    Ignore o código da classe se houver.
+</p><p>
+    Sobre a chave "decisao_recebeu_um_recurso_com_ou_sem_efeito_suspensivo", o recurso não pode se referir a embargos de
+    declaracao, que deverá ser marcada em chave própria. Ademais, se o ato judicial se referir aos embargos de declaracao
+    o tipo do ato judicial deve ser considerado uma decisão.
+</p><p>
+    Sobre a chave "existe_determinacao_para_arquivar_o_processo", ela deve ser avaliada caso o ato judicial não se trate
+    de mero expediente do juízo, logo, excluídos os julgamento de mérito, julgamento de embargos de execução, 
+    julgamento de embargos de declaração ou decisão acerca do recebimento ou não de recursos. Deve ser avaliado naqueleas.
+    Se o ato possuir a condicionante "sob pena de arquivamento" ou expressão equivalente, marque esta chave como falsa.
+</p><p>
+    Sobre a chave "determina_apenas_a_intimacao_de_partes_no_processo", ela deve ser analisada em atos judiciais 
+    que o juíz indique expressamente que uma das partes deve ser intimada, excluídas assim quaisquers outras determinacões.
+    Eventualmente, anterior a determinação de intimação, o juiz poderá estar decidindo acerca de algo e deferindo ou 
+    indeferindo pedidos das partes.
+</p>
+

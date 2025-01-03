@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 from asyncio import Queue
-from utils.mensagem import Mensagem, from_json
+from model.mensagem import Mensagem, from_json
 from typing import Dict, Union
 
 class WebSocketServerClient:
