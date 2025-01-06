@@ -67,9 +67,12 @@ class ListaProcessosTarefa:
         card = await self.obter_proximo_card()
         asst = self.drivermgr.assistant
 
-        cards_pendentes = True
-        while cards_pendentes:
+        while True:
             try:
+                if await asst.verificar_modificacao_status_automacao():
+                    print(f"Iteração sobre cards da lista concluída. Motivo: Parado pelo usuário")
+                    break
+
                 def assegurar_mudanca_tarefa(driver):
                     card.selecionar()
                     try:
@@ -104,6 +107,11 @@ class ListaProcessosTarefa:
 
                 self.alternar_para_ng_frame()
 
+                if await asst.verificar_modificacao_status_automacao():
+                    print(f"Iteração sobre cards da lista concluída. Motivo: Parado pelo usuário")
+                    break
+
+
                 if resultado_robo == SituacaoTarefaEnum.FALHA:
                     if card.esta_anexao_ao_dom():
                         self.ultimo_card_nao_conncluido = card
@@ -117,7 +125,7 @@ class ListaProcessosTarefa:
 
             except Exception as e:
                 print(f"Iteração sobre cards da lista concluída. Motivo: {e}")
-                cards_pendentes = False
+                break
 
     async def recarregar_lista_processos(self):
         """

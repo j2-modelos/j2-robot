@@ -67,12 +67,25 @@ class ChatGpt:
         :return:
         """
         asst = self.drivemgr.assistant
-        elemento_esperado_locator = (By.XPATH, f"//span[contains(text(), '{uuid_vinculada}')]/..")
-        await asst.wait_for_element_exist(locator=elemento_esperado_locator, timeout=180)
-        await asst.wait_for(lambda d: asst.dom_util.extract_text_as_json_from_element(locator=elemento_esperado_locator), 180)
-        asst.clicar_elemento(locator=elemento_esperado_locator)
-        resposta_json = asst.dom_util.extract_text_as_json_from_element(elemento_esperado_locator)
-        return resposta_json
+
+        async def race_routine():
+            elemento_esperado_locator = (By.XPATH, f"//span[contains(text(), '{uuid_vinculada}')]/..")
+            await asst.wait_for_element_exist(locator=elemento_esperado_locator, timeout=180)
+            await asst.wait_for(lambda d: asst.dom_util.extract_text_as_json_from_element(locator=elemento_esperado_locator), 180)
+            asst.clicar_elemento(locator=elemento_esperado_locator)
+            resposta_json = asst.dom_util.extract_text_as_json_from_element(elemento_esperado_locator)
+            return resposta_json
+
+
+        future_json, __, resultado = await asst.wait_race([
+            (race_routine(), "sucesso"),
+            (asst.wait_for_element_visible(css_selector=".text-token-text-error"), "falha")
+        ], timeout=190)
+
+        if resultado == "sucesso":
+            return future_json
+        elif resultado == "falha":
+            raise J2RobotErro(7)
 
     async def iniciar_novo_chat(self, titulo_chat=None):
         asst = self.drivemgr.assistant
@@ -96,12 +109,9 @@ class ChatGpt:
         uuid_gerado = str(uuid.uuid1())
         prompt_inicial = f'Vamos iniciar?{ f"Análise de { titulo_chat }." if titulo_chat else "" } Responda-me: "Ok, vamos lá!!!" e um json: {{ ID:{uuid_gerado} }}"'
         await self.inserir_prompt(prompt_inicial)
-        _, __, resultado = await asst.wait_race([
-            (self.aguardar_resposta(uuid_vinculada=uuid_gerado), "sucesso"),
-            (asst.wait_for_element_visible(css_selector=".text-token-text-error"), "falha")
-        ], timeout=190)
+        try:
+            await self.aguardar_resposta(uuid_vinculada=uuid_gerado)
 
-        if resultado == "sucesso":
             if titulo_chat:
                 url_atual = await asst.obter_url_frame_ativo()
                 menu_activator = await asst.wait_for_element_visible(locator=(By.XPATH, f"//nav//a[contains(@href, '{extract_uuid(url_atual)}')]/..//button"))
@@ -111,6 +121,11 @@ class ChatGpt:
                 input_chat_name = await asst.wait_for_element_visible(
                     locator=(By.XPATH, f"//nav//a[contains(@href, '{extract_uuid(url_atual)}')]/..//input"))
                 asst.campo_limpar_e_escrever(input_chat_name, titulo_chat)
-        else:
+
+        except J2RobotErro as e:
+            print("Falha ao iniciar novo chat no ChatGPT")
             await  self.voltar_guia_invocadora()
-            raise J2RobotErro(7)
+            raise e
+        except Exception as e:
+            print("Falha ao iniciar novo chat no ChatGPT")
+            raise e

@@ -17,25 +17,29 @@ class Dev:
         asyncio.create_task( self.init_async() )
 
     async  def init_async(self):
-        self.ng_frame = await self.drivermgr.ast().wait_for_element_visible(
-            locator=(By.CSS_SELECTOR, '#ngFrame'), timeout=300
-        )
-        self.drivermgr.assistant.painel_usuario = PainelUsuarioInterno(self.drivermgr, self.ng_frame)
+        while True:
+            if self.drivermgr.assistant.dom_util.element_exist_in_dom(css_selector="#j2-robot"):
+                await  asyncio.sleep(2)
+                continue
 
-        with open(str(Path(__file__).parent / "dev_menu_automacao.html"), "r", encoding="utf-8") as file:
-            html_injection = file.read()
-        with open(str(Path(__file__).parent / "dev_menu_automacao.js"), "r", encoding="utf-8") as file:
-            js_injection = file.read()
-        self.drivermgr.assistant.dom_util.insert_html(css_selector="#barraSuperiorPrincipal  .navbar-right",
-                                                      position="afterbegin",
-                                                      html_string=f'{html_injection}')
-        self.drivermgr.assistant.dom_util.insert_script(js_injection)
+            self.ng_frame = await self.drivermgr.ast().wait_for_element_visible(
+                locator=(By.CSS_SELECTOR, '#ngFrame')
+            )
+            self.drivermgr.assistant.painel_usuario = PainelUsuarioInterno(self.drivermgr, self.ng_frame)
 
-        self._registrar_numero_porta_documento()
+            with open(str(Path(__file__).parent / "dev_menu_automacao.html"), "r", encoding="utf-8") as file:
+                html_injection = file.read()
+            with open(str(Path(__file__).parent / "dev_menu_automacao.js"), "r", encoding="utf-8") as file:
+                js_injection = file.read()
+            self.drivermgr.assistant.dom_util.insert_html(css_selector="#barraSuperiorPrincipal  .navbar-right",
+                                                          position="afterbegin",
+                                                          html_string=f'{html_injection}')
+            self.drivermgr.assistant.dom_util.insert_script(js_injection)
 
-        print('Inserido menu do robô')
+            self._registrar_numero_porta_documento()
 
-        return self
+            print('Inserido menu do robô')
+            await  asyncio.sleep(2)
 
     def _registrar_numero_porta_documento(self):
         """
@@ -68,7 +72,7 @@ class Dev:
 
             if user_command.tarefa and user_command.tarefa.strip():
                 try:
-                    await  self.drivermgr.assistant.websocket.send_to_client({
+                    await self._enviar_mensagem_cliente({
                         'acao': 'estado-lista-de-automacoes',
                         'estado': str(EstadoAutomacao.EXECUTANDO)
                     })
@@ -77,7 +81,7 @@ class Dev:
                     # Captura qualquer exceção
                     print(f"Ocorreu um erro: {e}")
                 finally:
-                    await  self.drivermgr.assistant.websocket.send_to_client({
+                    await self._enviar_mensagem_cliente({
                         'acao': 'estado-lista-de-automacoes',
                         'estado': str(EstadoAutomacao.NAO_INICIADA)
                     })
@@ -100,6 +104,10 @@ class Dev:
                     novo_estado = EstadoAutomacao[user_command.estado_automacao.split('.')[-1]]
                     self.drivermgr.assistant.estado_automacao = novo_estado
                     print(f"Estado automação modificado para: {novo_estado}")
+                    await self._enviar_mensagem_cliente({
+                        'acao': 'estado-lista-de-automacoes',
+                        'estado': user_command.estado_automacao
+                    })
 
             return False
 
@@ -112,3 +120,12 @@ class Dev:
         ])
 
         print(f"Automação concluída via {concluido_por}.")
+        self.drivermgr.assistant.estado_automacao = EstadoAutomacao.NAO_INICIADA
+        await self._enviar_mensagem_cliente({
+            'acao': 'estado-lista-de-automacoes',
+            'estado': str(self.drivermgr.assistant.estado_automacao)
+        })
+
+
+    async def _enviar_mensagem_cliente(self, mensagem):
+        await  self.drivermgr.assistant.websocket.send_to_client(mensagem)

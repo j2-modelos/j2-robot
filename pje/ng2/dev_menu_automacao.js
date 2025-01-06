@@ -88,7 +88,7 @@ function estadoAutomacoes(estado) {
             break;
 
         case 'EstadoAutomacao.PARADA':
-            [close, play, stop, ...listaItens].forEach(function(item) {
+            [close, play, stop, pause, ...listaItens].forEach(function(item) {
                 item.classList.add('disabled');
             });
             break;
@@ -97,7 +97,7 @@ function estadoAutomacoes(estado) {
             [close, ...listaItens].forEach(function(item) {
                 item.classList.remove('disabled');
             });
-            [close, play, stop].forEach(function(item) {
+            [pause, play, stop].forEach(function(item) {
                 item.classList.add('disabled');
             });
             break;

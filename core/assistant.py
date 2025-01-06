@@ -454,3 +454,57 @@ class Assistant:
          .send_keys(Keys.RETURN)
          .perform()
          )
+
+    async def verificar_modificacao_status_automacao(self):
+        """
+        Verifica o estado atual da automação e decide se deve prosseguir, aguardar ou encerrar.
+
+        Esta função analisa o atributo `estado_automacao` da instância da classe (provavelmente
+        um valor enumerado do tipo `EstadoAutomacao`) e executa ações com base em três possíveis
+        estados: EXECUTANDO, PARADA e PAUSADA.
+
+        Estados tratados:
+        - `EstadoAutomacao.EXECUTANDO`:
+            - Indica que a automação está em execução normal.
+            - Imprime uma mensagem informativa e retorna `False`, sinalizando que nenhuma modificação é necessária.
+
+        - `EstadoAutomacao.PARADA`:
+            - Indica que a automação foi interrompida.
+            - Imprime uma mensagem informativa e retorna `True`, indicando que a automação deve ser encerrada.
+
+        - `EstadoAutomacao.PAUSADA`:
+            - Indica que a automação está temporariamente suspensa.
+            - Imprime mensagens informativas e aguarda um evento que altere o estado para algo diferente de PAUSADA.
+            - Após a mudança de estado, a função se chama recursivamente para verificar o novo estado.
+
+        Returns:
+            bool:
+            - `True` se a automação deve ser encerrada.
+            - `False` se a automação está executando normalmente.
+
+        Exemplo de Uso:
+        ```python
+        resultado = await objeto.verificar_modificacao_status_automacao()
+        if resultado:
+            print("Encerrando a automação.")
+        else:
+            print("Automação continua em execução.")
+        ```
+
+        """
+        if self.estado_automacao == EstadoAutomacao.EXECUTANDO:
+            print("Estado da Automação: EXECUTANDO.")
+            return False
+
+        if self.estado_automacao == EstadoAutomacao.PARADA:
+            print("Estado da Automação PARADO.")
+            print("Esta automação será encerrada.")
+            return True
+
+        if self.estado_automacao == EstadoAutomacao.PAUSADA:
+            print("Estado da Automação PAUSADA.")
+            print("Aguardando retomar.")
+            await self.wait_for(lambda d: self.estado_automacao != EstadoAutomacao.PAUSADA)
+            return await self.verificar_modificacao_status_automacao()
+
+

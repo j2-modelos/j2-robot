@@ -42,9 +42,5 @@ class J2RobotErro(Exception):
         super().__init__(f"Erro #{codigo_erro:04}: {self.mensagem}{ f' ({complemento})' if complemento else '' }")
 
     def _obter_mensagem_erro(self, codigo_erro: int) -> str:
-        erros = {
-            1: "O frame da tarefa não está mais na ListaProcessosTarefa.",
-            2: "Erro ocorrido no frame da tarefa.",
-            3: "Erro durante a transição da tarefa pelo fluxo."
-        }
-        return erros.get(codigo_erro, "Erro desconhecido.")
+        dicionario_de_erros = dict(J2RobotErro.erros)
+        return dicionario_de_erros.get(codigo_erro, "Erro desconhecido.")

@@ -72,11 +72,8 @@ class AvaliarMultiSelecao(TarefaFluxo):
             return uuid_value
 
     async def selecionar_tarefa_nodo(self, tarefa):
-        return
-        """
         x_path_query = f"//form[@id='taskInstanceForm']//label[normalize-space(text())='{tarefa}']/ancestor::div[contains(@class, 'propertyView')]//input"
         asst = self.drivermgr.assistant
         input_node = await asst.wait_for_element_exist(locator=(By.XPATH, x_path_query), timeout=60)
         input_node.click()
         return
-        """

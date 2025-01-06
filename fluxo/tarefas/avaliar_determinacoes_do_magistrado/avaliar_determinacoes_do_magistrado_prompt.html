@@ -15,7 +15,7 @@
    <br>&nbsp;&nbsp;&nbsp;&nbsp;ha_uma_obrigacao_de_fazer_a_ser_cumprida: {
    <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sim_ha: true ou false,
    <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a_obrigacao_de_fazer_esta_no_mesmo_paragrafo_que_ha_confirmacao_de_liminar: true ou false,
-   <br>&nbsp;&nbsp;&nbsp;&nbsp;},   
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;},
    <br>&nbsp;&nbsp;&nbsp;&nbsp;eh_uma_homolocao_de_acordo: true ou false,   
    <br>&nbsp;&nbsp;&nbsp;&nbsp;determina_se_deve_ser_expedido_algum_oficio_judicial_a_uma_outra_autoridade: true ou false,
    <br>&nbsp;&nbsp;},
@@ -75,8 +75,13 @@
     Se o ato possuir a condicionante "sob pena de arquivamento" ou expressão equivalente, marque esta chave como falsa.
 </p><p>
     Sobre a chave "determina_apenas_a_intimacao_de_partes_no_processo", ela deve ser analisada em atos judiciais 
-    que o juíz indique expressamente que uma das partes deve ser intimada, excluídas assim quaisquers outras determinacões.
+    que o juíz indique expressamente que uma das partes deve ser intimada. Se houver outras outras determinacões além da intimação,
+    essa chave deve ser marcada como false.
     Eventualmente, anterior a determinação de intimação, o juiz poderá estar decidindo acerca de algo e deferindo ou 
     indeferindo pedidos das partes.
+</p><p>
+    Sobre a chave "determina_se_deve_ser_expedido_algum_oficio_judicial_a_uma_outra_autoridade", a expedição de alvará
+    não deve ser desconsiderada como um oficio judicial, O juíz expressará textual com "expeça-se ofício" ou expressão equivalente,
+    excluída, novamente, a expedição de alvará judicial.
 </p>
 

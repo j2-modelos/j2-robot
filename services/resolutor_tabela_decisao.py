@@ -5,6 +5,7 @@ import pandas as pd
 class ResolutorTabelaDecisao:
     rotulo_controle_encerramento_loop_avaliacao = "encerra_decisao"
     rotulo_marcador_identificacao = "identificacao"
+    rotulo_marcador_descricao = "descricao"
     rotulo_fase_avaliacao = "avaliacao"
     rotulo_fase_acao = "acao"
     rotulo_fase_controle = "controle"
@@ -25,7 +26,7 @@ class ResolutorTabelaDecisao:
             print("ResolutorTabelaDecisao: tabela transposta:", tabela)
 
         self.tabela_cabecalho = tabela.iloc[:(json_niveis+1), :]
-        self.tabela_corpo = tabela.iloc[(json_niveis+1):, :]
+        self.tabela_corpo = tabela.iloc[(json_niveis+2):, :]
 
         print("ResolutorTabelaDecisao: cabeçalho tabela decisão:")
         print(self.tabela_cabecalho)
@@ -72,6 +73,8 @@ class ResolutorTabelaDecisao:
                         cabecalho_celula_valor =  self.tabela_cabecalho.iloc[j, i]
                         if cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_marcador_identificacao:
                             identificacao_decisao = corpo_celula_valor
+                            break
+                        if cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_marcador_descricao:
                             break
                         elif (cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_avaliacao
                               or cabecalho_celula_valor == ResolutorTabelaDecisao.rotulo_fase_acao
@@ -187,29 +190,39 @@ if __name__ == "__main__":
         """
         
 {
-  "json_uuid": "$uuid",
-  "ato_judicial_uuid": "$ato_uuid",
-  "o_tipo_do_ato_judicial_eh": "sentenca",
+  "json_uuid": "7756e223-c975-11ef-891c-00e04cd1067f",
+  "ato_judicial_uuid": "f9a1b769-42de-46a3-84e8-6ee1112be3d1",
+  "o_tipo_do_ato_judicial_eh": "decisao",
   "se_for_sentenca": {
-    "julgamento_com_merito": true,
+    "julgamento_com_merito": false,
     "julgamento_sem_merito": false,
     "ha_uma_obrigacao_de_fazer_a_ser_cumprida": {
-      "sim_ha": true,
+      "sim_ha": false,
       "a_obrigacao_de_fazer_esta_no_mesmo_paragrafo_que_ha_confirmacao_de_liminar": false
     },
     "eh_uma_homolocao_de_acordo": false,
     "determina_se_deve_ser_expedido_algum_oficio_judicial_a_uma_outra_autoridade": false
   },
-  "se_for_despacho": {},
-  "se_for_decisao": {},
+  "se_for_despacho": {
+    "determina_inicio_da_fase_de_execucao_judidcial": false,
+    "determina_que_uma_audiencia_de_conciliacao_deve_ser_realizada_no_processo": false,
+    "determina_que_a_parte_comprove_o_seu_interesse_de_agir_mediante_tentativa_de_solucao_anterior": false,
+    "se_determina_a_emenda_da_peticao_inicial_no_prazo_15_dias": {
+      "sim_determina": false,
+      "determina_retornar_autos_para_decisao_urgencia_ou_decisao_liminar": false
+    }
+  },
+  "se_for_decisao": {
+    "decisao_recebeu_um_recurso_com_ou_sem_efeito_suspensivo": false,
+    "decisao_diz_respeito_concessao_ou_nao_de_uma_tutela_provisoria": true,
+    "decisao_diz_respeito_a_embargos_de_declaracao": false
+  },
   "determina_apenas_a_intimacao_de_partes_no_processo": true,
   "existe_determinacao_para_incluir_ou_retirar_partes_do_processo": false,
-  "existe_determinacao_para_arquivar_o_processo": true,
-  "a_classe_do_processo_eh": "procedimento do juizado especial civel",
+  "existe_determinacao_para_arquivar_o_processo": false,
+  "a_classe_do_processo_eh": "procedimento do juizado especial cível",
   "houve_decretacao_revelia": false
-}
-
-        
+}    
         """
     )
 
