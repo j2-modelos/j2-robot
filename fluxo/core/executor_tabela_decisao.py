@@ -2,6 +2,7 @@ from core.web_driver_manager import WebDriverManager
 from fluxo.core.tarefa_fluxo import TarefaFluxo
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
 from model.situacao_tarefa_enum import SituacaoTarefaEnum
+from services.gerador_prompt_tabela_decisao import GeradorPromptTabelaDecisao
 from services.resolutor_tabela_decisao import ResolutorTabelaDecisao
 from model.mensagem import Mensagem
 
@@ -10,21 +11,26 @@ class ExecutorTabelaDecisao(TarefaFluxo):
     tabelas_decisao = []
 
     def __init__(self, nome: str, drivermgr: WebDriverManager, mensagem: Mensagem, painel_lista: ListaProcessosTarefa,
-                       caminho_arquivo: str, json_niveis: int, transpor=False, cabecalho=None):
+                       caminho_arquivo: str, json_niveis: int, transpor=False, cabecalho=None, prompt: bool = False):
         super().__init__(nome,drivermgr,mensagem, painel_lista)
 
         resolutor_deste = None
-        for it_tarefa, it_resolutor in ExecutorTabelaDecisao.tabelas_decisao:
+        prompt_deste = None
+        for it_tarefa, it_resolutor, it_prompt in ExecutorTabelaDecisao.tabelas_decisao:
             if it_tarefa == self.nome:
                 resolutor_deste = it_resolutor
+                prompt_deste = it_prompt
                 break
 
         if not resolutor_deste:
             resolutor_deste = ResolutorTabelaDecisao(caminho_tabela=caminho_arquivo, json_niveis=json_niveis, precisa_transpor=transpor, cabecalho=cabecalho)
-            ExecutorTabelaDecisao.tabelas_decisao.append((self.nome, resolutor_deste ))
+            if prompt:
+                prompt_deste = GeradorPromptTabelaDecisao(caminho_tabela=caminho_arquivo, json_niveis=json_niveis, precisa_transpor= not transpor)
+            ExecutorTabelaDecisao.tabelas_decisao.append((self.nome, resolutor_deste, prompt_deste ))
 
 
         self.resolutor = resolutor_deste
+        self.prompt = prompt_deste
         self.json_para_analise = None
         self.medidas_a_tomar = None
 

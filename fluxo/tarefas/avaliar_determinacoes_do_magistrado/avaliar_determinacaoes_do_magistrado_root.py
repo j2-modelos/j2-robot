@@ -20,7 +20,7 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
 
         caminho_tabela_decisao = str(Path(__file__).parent / 'avaliar_determinacoes_do_magistrado_tabela_decisao.xlsx')
         ExecutorTabelaDecisao.__init__(self, nome_, drivermgr, mensagem, painel_lista,
-                                       caminho_tabela_decisao, 3, True )
+                                       caminho_tabela_decisao, 3, True, prompt=True )
 
         self.chatgpt: ChatGpt = None
 
@@ -44,7 +44,7 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
         ato_judicial = self.obter_teor_ato_judicial_para_prompt()
         gen_uuid = str(uuid.uuid1())
         ato_uuid = self.obter_uuid_ato_judicial() or "[inexistente]"
-
+        """
         with open(str(Path(__file__).parent / 'avaliar_determinacoes_do_magistrado_prompt.html'), "r", encoding="utf-8") as arquivo:
             prompt = Template(arquivo.read())
 
@@ -54,7 +54,15 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
             "ato_uuid": ato_uuid
         }
         prompt = prompt.substitute(dados)
+        """
         chat_name = f"{self.obter_acronimo_tarefa()} {self.numero_processo or "XXXXXXX-XX.XXXX.X.XX.XXXX"}"
+        prompt = self.prompt.obter_compilado( json_base={
+            "uuid": gen_uuid,
+            "ato_uuid": ato_uuid,
+            "numero": self.numero_processo
+        }, substitutos= {
+            "ato_judicial": ato_judicial,
+        } )
 
         try:
             await self.chatgpt.iniciar_novo_chat(chat_name)
