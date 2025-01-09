@@ -17,6 +17,7 @@ class J2RobotErro(Exception):
         6. "Erro de iteração pelos cartões na lista de processos de tarefa."
         7. "Erro durante a espera de resposta do ChatGPT"
         8. "Automação encerrada devido erro em serviço terceiro dependente"
+        9. "Aplicação parada dentro de loop talvez infinito."
 
     Exemplo de uso:
         raise J2RobotErro(1)
@@ -33,11 +34,14 @@ class J2RobotErro(Exception):
         (6, "Erro de iteração pelos cartões na lista de processos de tarefa."),
         (7, "Erro durante a espera de resposta do ChatGPT"),
         (8, "Automação encerrada devido erro em serviço terceiro dependente"),
+        (9, "Aplicação parada dentro de loop talvez infinito."),
+        (10, "Ponto de limbo/situação never atingida na aplicação."),
     ]
 
     def __init__(self, codigo_erro: int, anterior: Exception = None, complemento: str = None):
         self.codigo_erro: int = codigo_erro
         self.mensagem = self._obter_mensagem_erro(codigo_erro)
+        self.complemento = complemento
         self.anterior = anterior
         super().__init__(f"Erro #{codigo_erro:04}: {self.mensagem}{ f' ({complemento})' if complemento else '' }")
 

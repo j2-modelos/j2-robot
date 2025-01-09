@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 import os
 
 from model.driver_guia import DriverGuia
-
-# Carregar o arquivo .env
-load_dotenv()
+from utils.env import ENV_J2_EXTENSION_PATH, ENV_J2_EXTENSAO_VERSAO, ENV_CHROME_DRIVER_PATH, ENV_CHROME_USER_DATA_DIR, \
+    ENV_PERFIL_CHROME
+from utils.path import get_resource_path
 
 
 class WebDriverManager:
@@ -27,11 +27,11 @@ class WebDriverManager:
         :param load_extension: Caminho para uma extensão do Chrome a ser carregada.
         :param maximize_window: Se deve maximizar a janela ao abrir o navegador.
         """
-        extensao_base_path = str(Path(os.getenv('J2_EXTENSION_PATH')).resolve())
-        extensao_versao = os.getenv('J2_EXTENSAO_VERSAO')
+        extensao_base_path = get_resource_path(ENV_J2_EXTENSION_PATH, packaged=False)
+        extensao_versao = ENV_J2_EXTENSAO_VERSAO
 
         #self.driver_path = os.getenv('CHROME_DRIVER_PATH')
-        self.driver_path = str(Path(os.getenv('CHROME_DRIVER_PATH')).resolve())
+        self.driver_path =  get_resource_path(ENV_CHROME_DRIVER_PATH, packaged=False)
         self.load_extension = f'{extensao_base_path}/{extensao_versao}'
         self.maximize_window = maximize_window
         self.driver: webdriver = None
@@ -63,8 +63,8 @@ class WebDriverManager:
         })
 
         # Configurar opções do Chrome
-        user_data_dir = os.getenv('CHROME_USER_DATA_DIR')
-        perfil_chrome = os.getenv("PERFIL_CHROME")
+        user_data_dir = ENV_CHROME_USER_DATA_DIR
+        perfil_chrome = ENV_PERFIL_CHROME
         options.add_argument(f"user-data-dir={user_data_dir}")
         options.add_argument(
             f'--profile-directory={ perfil_chrome }')  # Geralmente é 'Default', a menos que você tenha múltiplos perfis

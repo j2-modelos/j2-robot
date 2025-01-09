@@ -10,6 +10,7 @@ from fluxo.tarefas.classes.avaliacao_multi_selecao import AvaliarMultiSelecao
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
 from model.j2_robot_erro import J2RobotErro
 from model.mensagem import Mensagem
+from utils.path import get_resource_path
 
 
 class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisao):
@@ -18,7 +19,7 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
         nome_ = "Avaliar determinações do magistrado"
         AvaliarMultiSelecao.__init__(self, nome_, drivermgr, mensagem, painel_lista)
 
-        caminho_tabela_decisao = str(Path(__file__).parent / 'avaliar_determinacoes_do_magistrado_tabela_decisao.xlsx')
+        caminho_tabela_decisao = get_resource_path("fluxo/tarefas/avaliar_determinacoes_do_magistrado/avaliar_determinacoes_do_magistrado_tabela_decisao.xlsx", packaged=False)
         ExecutorTabelaDecisao.__init__(self, nome_, drivermgr, mensagem, painel_lista,
                                        caminho_tabela_decisao, 3, True, prompt=True )
 

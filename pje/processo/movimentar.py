@@ -28,7 +28,7 @@ class Movimentar:
             return  self.pronto
 
         try:
-            await self.drivermgr.assistant.wait_for(esta_pronto)
+            await self.drivermgr.assistant.wait_for_and_state_controller(esta_pronto)
         except Exception as e:
             print(e)
 

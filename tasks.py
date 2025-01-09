@@ -4,6 +4,10 @@ from invoke import task
 def build_exe(ctx):
     ctx.run('pyinstaller   main.spec --noconfirm --distpath ".dist" --workpath ".build"')
 
+@task
+def build_exe_teste(ctx):
+    ctx.run('pyinstaller   dev_scripts/pyi/main.spec --noconfirm --distpath "dev_scripts/pyi/.dist" --workpath "dev_scripts/pyi/.build"')
+
 """
 @task
 def install(ctx):

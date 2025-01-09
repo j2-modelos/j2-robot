@@ -111,7 +111,6 @@ class GeradorPromptTabelaDecisao:
                     continue
 
                 tipo = linha[self.indice_tipo_dado_json_prompt] or "[NÃO DEFINIDO]"
-                tipo = tipo.strip('"')
                 propriedade_chave = None
                 linha_iterar = linha[1:-1]
                 linha_len = len(linha_iterar)
@@ -140,7 +139,7 @@ class GeradorPromptTabelaDecisao:
                         #print("PARCIAL:")
                         #print("\n".join(linhas_fragment_html))
                     else:
-                        linha_fragment = f'    <br>{GeradorPromptTabelaDecisao.caractere_espaco * self.espacamento * (indice + 1)}{propriedade_chave}: "{tipo}",'
+                        linha_fragment = f'    <br>{GeradorPromptTabelaDecisao.caractere_espaco * self.espacamento * (indice + 1)}{propriedade_chave}: {tipo},'
                         linhas_fragment_html.append(linha_fragment)
                         #print("PARCIAL:")
                         #print("\n".join(linhas_fragment_html))

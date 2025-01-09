@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from frontend.painel_usuario_interno_root import PainelUsuarioInterno
 from model.estado_automacao_enum import EstadoAutomacao
 from model.mensagem import Mensagem
+from utils.path import get_resource_path
 
 
 class Dev:
@@ -27,9 +28,9 @@ class Dev:
             )
             self.drivermgr.assistant.painel_usuario = PainelUsuarioInterno(self.drivermgr, self.ng_frame)
 
-            with open(str(Path(__file__).parent / "dev_menu_automacao.html"), "r", encoding="utf-8") as file:
+            with open(get_resource_path("pje/ng2/dev_menu_automacao.html"), "r", encoding="utf-8") as file:
                 html_injection = file.read()
-            with open(str(Path(__file__).parent / "dev_menu_automacao.js"), "r", encoding="utf-8") as file:
+            with open(get_resource_path("pje/ng2/dev_menu_automacao.js"), "r", encoding="utf-8") as file:
                 js_injection = file.read()
             self.drivermgr.assistant.dom_util.insert_html(css_selector="#barraSuperiorPrincipal  .navbar-right",
                                                           position="afterbegin",

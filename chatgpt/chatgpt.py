@@ -58,7 +58,7 @@ class ChatGpt:
         assistant = self.drivemgr.assistant
         prompt_textarea = await assistant.wait_for_element_visible(css_selector='#prompt-textarea', timeout=60)
         assistant.dom_util.alter_inner_html(element=prompt_textarea, html_string=prompt)
-        botao_enviar = await assistant.wait_for_element_visible(locator=(By.XPATH, "//*[@id='composer-background']/div[2]/button"), timeout=60)
+        botao_enviar = await assistant.wait_for_element_visible(locator=(By.XPATH, "(//div[@id='composer-background']//button)[last()]"), timeout=60)
         assistant.clicar_elemento(botao_enviar)
 
     async def aguardar_resposta(self, uuid_vinculada: str):
@@ -71,7 +71,7 @@ class ChatGpt:
         async def race_routine():
             elemento_esperado_locator = (By.XPATH, f"//span[contains(text(), '{uuid_vinculada}')]/..")
             await asst.wait_for_element_exist(locator=elemento_esperado_locator, timeout=180)
-            await asst.wait_for(lambda d: asst.dom_util.extract_text_as_json_from_element(locator=elemento_esperado_locator), 180)
+            await asst.wait_for_and_state_controller(lambda d: asst.dom_util.extract_text_as_json_from_element(locator=elemento_esperado_locator), 180)
             asst.clicar_elemento(locator=elemento_esperado_locator)
             resposta_json = asst.dom_util.extract_text_as_json_from_element(elemento_esperado_locator)
             return resposta_json

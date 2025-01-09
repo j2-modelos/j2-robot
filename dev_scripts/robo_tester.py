@@ -3,7 +3,7 @@ from time import sleep
 
 from chatgpt.chatgpt import ChatGpt
 from core.web_driver_manager import WebDriverManager
-from dev_scritps.gerador_nome_tarefa import gerar_acao_judicial
+from dev_scripts.gerador_nome_tarefa import gerar_acao_judicial
 
 
 async def robo():

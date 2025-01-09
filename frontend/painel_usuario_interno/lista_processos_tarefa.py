@@ -81,7 +81,7 @@ class ListaProcessosTarefa:
                     except:
                         return False
 
-                await self.drivermgr.assistant.wait_for(assegurar_mudanca_tarefa, 60)
+                await self.drivermgr.assistant.wait_for_and_state_controller(assegurar_mudanca_tarefa, 60)
 
                 await self.alternar_para_frame_tarefa()
 

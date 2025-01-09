@@ -16,6 +16,7 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 
 from model.driver_guia import DriverGuia
 from model.estado_automacao_enum import EstadoAutomacao
+from model.j2_robot_erro import J2RobotErro
 from utils.dom import Dom
 from utils.websocket_server_client import WebSocketServerClient
 
@@ -59,10 +60,10 @@ class Assistant:
         print(f"Conectado ao WebSocket na porta {self.ws_port}")
 
 
-    async def wait_for(self, condition_function, timeout=None):
+    async def wait_for_and_state_controller(self, condition_function, timeout=None, avoid_recursion=False):
         """
         Aguarda uma condição personalizada ser atendida de forma assíncrona.
-
+        Méto-do também realiza o controle do estado de execução da automação da aplicaçao.
         Args:
             condition_function (function (WebDriver)): Função que define a condição a ser aguardada. Função síncrona.
             timeout (int, optional): Tempo máximo (em segundos) para aguardar a condição. Padrão: self.timeout.
@@ -71,13 +72,20 @@ class Assistant:
             O resultado da condição se atendida.
         Raises:
             asyncio.TimeoutError: Se a condição não for atendida dentro do tempo limite.
+            :param avoid_recursion: quando do controle de estado, realizada o cuidado de evitar a recursão na execuçáo
         """
         timeout = timeout or self.timeout or 86400
 
         # Wrap the condition_function to work with asyncio
         def wrapper_condition(self_driver):
             try:
+                if not avoid_recursion and self.estado_automacao != EstadoAutomacao.NAO_INICIADA and self.estado_automacao != EstadoAutomacao.EXECUTANDO:
+                    raise J2RobotErro(9, complemento=f"Assistant.wait_for->{self.estado_automacao}")
+
                 return condition_function(self_driver)
+
+            except J2RobotErro as e:
+                raise e
             except Exception:
                 return False
 
@@ -87,8 +95,21 @@ class Assistant:
                 None,
                 lambda: WebDriverWait(self.driver, timeout).until(wrapper_condition)
             )
-            sleep(0.200)
+            await asyncio.sleep(0.200)
             return result
+
+        except J2RobotErro as e:
+            if e.complemento.endswith(str(EstadoAutomacao.PAUSADA)):
+                await self.wait_for_and_state_controller(lambda d: self.estado_automacao != EstadoAutomacao.PAUSADA, avoid_recursion=True)
+                if self.estado_automacao == EstadoAutomacao.PARADA:
+                    raise J2RobotErro(9, complemento=f"Assistant.wait_for->{self.estado_automacao}")
+                elif self.estado_automacao == EstadoAutomacao.EXECUTANDO:
+                    return await self.wait_for_and_state_controller(condition_function, timeout, avoid_recursion=False)
+                else:
+                    raise J2RobotErro(codigo_erro=10)
+            elif e.complemento.endswith(str(EstadoAutomacao.PARADA)):
+                raise e
+
         except TimeoutException:
             raise asyncio.TimeoutError("The condition was not met within the specified timeout.")
 
@@ -173,7 +194,9 @@ class Assistant:
             return condition(driver)
 
         try:
-            await self.wait_for(wrapper_condition, timeout)
+            await self.wait_for_and_state_controller(wrapper_condition, timeout)
+        except J2RobotErro as e:
+            raise e
         except Exception as e:
             # Propagar ou customizar a exceção de timeout
             raise TimeoutException(f"O elemento com locator {locator} não ficou visível em {timeout} segundos.") from e
@@ -217,7 +240,9 @@ class Assistant:
 
         try:
             # Espera até que o elemento seja encontrado no DOM
-            await self.wait_for(wrapper_condition, timeout)
+            await self.wait_for_and_state_controller(wrapper_condition, timeout)
+        except J2RobotErro as e:
+            raise e
         except Exception as e:
             # Propagar ou customizar a exceção de timeout
             raise TimeoutException(
@@ -265,7 +290,7 @@ class Assistant:
             value = element.get_attribute("value")
             return value if value.strip() else False
 
-        result = await self.wait_for(user_input_provided, timeout)
+        result = await self.wait_for_and_state_controller(user_input_provided, timeout)
         return result
 
     async def wait_for_chrome_ready(self, timeout=None):
@@ -284,7 +309,7 @@ class Assistant:
         try:
             print("Aguardando o Chrome estar pronto...")
             # Verificar o estado da página até que esteja "complete"
-            await self.wait_for(
+            await self.wait_for_and_state_controller(
                 lambda driver: driver.execute_script("return document.readyState") == "complete",
                 timeout=timeout
             )
@@ -339,8 +364,10 @@ class Assistant:
             return not self.dom_util.is_element_still_in_dom(element)
 
         try:
-            result = await self.wait_for(element_removed_from_dom, timeout)
+            result = await self.wait_for_and_state_controller(element_removed_from_dom, timeout)
             return result
+        except J2RobotErro as e:
+            raise e
         except asyncio.TimeoutError:
             raise asyncio.TimeoutError(
                 "O elemento ainda está anexado ao DOM após o tempo limite especificado."
@@ -353,7 +380,7 @@ class Assistant:
         quantidade_guias_atuais = len(self.driver.window_handles)
 
         self.driver.execute_script(f"window.open('{url}', '_blank')")
-        await self.wait_for(lambda d: EC.number_of_windows_to_be( quantidade_guias_atuais+1 ) )
+        await self.wait_for_and_state_controller(lambda d: EC.number_of_windows_to_be(quantidade_guias_atuais + 1))
         nova_guia = DriverGuia(alias, self.driver.window_handles[quantidade_guias_atuais])
         self.guias_abertas.append(nova_guia)
         self.driver.switch_to.window(nova_guia.id)
@@ -504,7 +531,13 @@ class Assistant:
         if self.estado_automacao == EstadoAutomacao.PAUSADA:
             print("Estado da Automação PAUSADA.")
             print("Aguardando retomar.")
-            await self.wait_for(lambda d: self.estado_automacao != EstadoAutomacao.PAUSADA)
-            return await self.verificar_modificacao_status_automacao()
+            try:
+                await self.wait_for_and_state_controller(lambda d: self.estado_automacao != EstadoAutomacao.PAUSADA)
+            except J2RobotErro as e:
+                print("Estado da Automação PARADO.")
+                print("Esta automação será encerrada.")
+                return True
+            finally:
+                return await self.verificar_modificacao_status_automacao()
 
 
