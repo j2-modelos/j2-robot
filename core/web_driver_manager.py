@@ -12,7 +12,7 @@ import os
 
 from model.driver_guia import DriverGuia
 from utils.env import ENV_J2_EXTENSION_PATH, ENV_J2_EXTENSAO_VERSAO, ENV_CHROME_DRIVER_PATH, ENV_CHROME_USER_DATA_DIR, \
-    ENV_PERFIL_CHROME
+    ENV_PERFIL_CHROME, ENV_DOWNLOAD_FOLDER
 from utils.path import get_resource_path
 
 
@@ -54,8 +54,10 @@ class WebDriverManager:
         if self.maximize_window:
             options.add_argument("--start-maximized")
 
+        download_folder_path = get_resource_path(ENV_DOWNLOAD_FOLDER, packaged=False)
+
         options.add_experimental_option('prefs', {
-            "download.default_directory": r"C:\temp",
+            "download.default_directory": download_folder_path,
             "download.prompt_for_download": False,
             "plugins.always_open_pdf_externally": True,
             "download.open_pdf_in_system_reader": False,
@@ -63,7 +65,7 @@ class WebDriverManager:
         })
 
         # Configurar opções do Chrome
-        user_data_dir = ENV_CHROME_USER_DATA_DIR
+        user_data_dir = get_resource_path(ENV_CHROME_USER_DATA_DIR, packaged=False)
         perfil_chrome = ENV_PERFIL_CHROME
         options.add_argument(f"user-data-dir={user_data_dir}")
         options.add_argument(

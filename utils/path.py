@@ -22,4 +22,6 @@ def get_resource_path(resource_name, packaged=True):
         # Durante o desenvolvimento, quando o código está sendo executado diretamente do script
         resource_path = os.path.join(os.path.dirname(__file__), os.path.pardir, resource_name)
 
+    resource_path = os.path.normpath(resource_path).replace("\\", "/")
+
     return resource_path

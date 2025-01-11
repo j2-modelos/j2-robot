@@ -18,6 +18,7 @@ binaries = [
 data_not_packagable = [
     ('fluxo', 'fluxo'),
     ("artifacts", "artifacts"),
+    (".env.chrome", ".")
 ]
 
 data_packagable = [
