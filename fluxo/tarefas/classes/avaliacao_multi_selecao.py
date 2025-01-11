@@ -6,6 +6,7 @@ from core.web_driver_manager import WebDriverManager
 from fluxo.core.tarefa_fluxo import TarefaFluxo
 from frontend.painel_usuario_interno.lista_processos_tarefa import ListaProcessosTarefa
 from model.mensagem import Mensagem
+from utils.env import ENV_AVALIACAO_MULTI_SELECAO_MODO_VALIDACAO
 
 
 class AvaliarMultiSelecao(TarefaFluxo):
@@ -72,6 +73,9 @@ class AvaliarMultiSelecao(TarefaFluxo):
             return uuid_value
 
     async def selecionar_tarefa_nodo(self, tarefa):
+        if ENV_AVALIACAO_MULTI_SELECAO_MODO_VALIDACAO:
+            return
+
         x_path_query = f"//form[@id='taskInstanceForm']//label[normalize-space(text())='{tarefa}']/ancestor::div[contains(@class, 'propertyView')]//input"
         asst = self.drivermgr.assistant
         input_node = await asst.wait_for_element_exist(locator=(By.XPATH, x_path_query), timeout=60)
