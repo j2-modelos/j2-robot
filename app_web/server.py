@@ -52,6 +52,7 @@ def save():
 def start_robot():
     iniciar_robo()
     print("Thread do robô iniciada!")
+    return render_template('start_robot.html')
 
 
 @app.route("/<path:path>")

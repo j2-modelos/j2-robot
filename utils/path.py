@@ -13,15 +13,6 @@ def get_resource_path(resource_name, packaged=True, build_folder=None):
             if hasattr(sys, '_MEIPASS'):
                 path = [sys._MEIPASS, resource_name if build_folder is None else build_folder]
                 resource_path = os.path.join(*path)
-                # todo: aqui
-                ___def = {
-                    "packaged": packaged,
-                    "resource_name": resource_name,
-                    "build_folder": build_folder,
-                    "path": path,
-                    "resource_path": resource_path
-                }
-                print(___def)
             else:
                 # Quando o modo onedir é usado, o recurso estará ao lado do executável
                 resource_path = os.path.join(os.path.dirname(sys.executable),  resource_name)
