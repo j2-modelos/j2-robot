@@ -7,7 +7,9 @@ from utils.tipos import normalizar_valor_boolean
 envs = [
     (".env", True),
     (".env.chrome", False),
-    ("fluxo/.env.fluxo", False)
+    ("fluxo/.env.fluxo", False),
+    #todo: aqui
+    ("app_web/.env.app_web", True)
 ]
 
 for env_path, packaged in envs:
@@ -26,3 +28,7 @@ ENV_BUILD_FOLDER = os.getenv("BUILD_FOLDER")
 ENV_EXE_NAME = os.getenv("EXE_NAME")
 
 ENV_AVALIACAO_MULTI_SELECAO_MODO_VALIDACAO = normalizar_valor_boolean(os.getenv("AVALIACAO_MULTI_SELECAO_MODO_VALIDACAO"))
+
+#todo: aqui
+ENV_WEB_APP_BUNDLES = os.getenv("WEB_APP_BUNDLES")
+ENV_WEB_APP_BUNDLES_BUILD_FOLDER = os.getenv("WEB_APP_BUNDLES_BUILD_FOLDER")

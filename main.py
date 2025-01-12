@@ -1,7 +1,8 @@
 import asyncio
 
-from core.robo import  robo
-#from dev_scripts.robo_tester import robo
+from app_web.app import iniciar_web_app
+
 
 if __name__ == "__main__":
-    asyncio.run( robo() )
+    #asyncio.run( robo() )
+    iniciar_web_app()

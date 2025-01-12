@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração do Robô</title>
+</head>
+<body>
+    <h1>Configuração do Robô</h1>
+    <form action="/save_config" method="POST">
+        <label for="speed">Velocidade:</label>
+        <input type="text" id="speed" name="speed" value="{{ config.get('speed', '') }}"><br><br>
+
+        <label for="mode">Modo:</label>
+        <input type="text" id="mode" name="mode" value="{{ config.get('mode', '') }}"><br><br>
+
+        <button type="submit">Salvar Configurações</button>
+    </form>
+
+    <h2><a href="/start_robot">Iniciar o Robô</a></h2>
+</body>
+</html>

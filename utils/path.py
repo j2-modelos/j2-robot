@@ -2,7 +2,7 @@ import os
 import sys
 
 
-def get_resource_path(resource_name, packaged=True):
+def get_resource_path(resource_name, packaged=True, build_folder=None):
     """Obtém o caminho correto para o arquivo de recurso,
     levando em consideração se estamos em 'onefile' ou 'onedir',
     ou se o parâmetro 'packaged' está True ou False."""
@@ -11,7 +11,17 @@ def get_resource_path(resource_name, packaged=True):
         if packaged:
             # No modo onefile (quando o PyInstaller extrai os arquivos para um diretório temporário)
             if hasattr(sys, '_MEIPASS'):
-                resource_path = os.path.join(sys._MEIPASS,  resource_name)
+                path = [sys._MEIPASS, resource_name if build_folder is None else build_folder]
+                resource_path = os.path.join(*path)
+                # todo: aqui
+                ___def = {
+                    "packaged": packaged,
+                    "resource_name": resource_name,
+                    "build_folder": build_folder,
+                    "path": path,
+                    "resource_path": resource_path
+                }
+                print(___def)
             else:
                 # Quando o modo onedir é usado, o recurso estará ao lado do executável
                 resource_path = os.path.join(os.path.dirname(sys.executable),  resource_name)

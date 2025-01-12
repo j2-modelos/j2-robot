@@ -1,4 +1,9 @@
+import asyncio
+import os
+import threading
 import time
+
+import psutil
 
 from core.web_driver_manager import WebDriverManager
 from pje.login import  Login
@@ -26,3 +31,20 @@ async def robo():
         # Fechar o navegador
         WebDriverManager.close_all_drivers()
         print("A aplicação foi encerrada.")
+
+
+def iniciar_robo():
+    # Verifica se já existe um processo com o nome deste script
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        if 'python' in proc.info['name'] and os.path.basename(__file__) in proc.info['cmdline']:
+            print("O robô já está em execução! (Processo existente)")
+            return
+
+    # Função que roda um loop de eventos assíncrono dentro da thread
+    def run_robo():
+        asyncio.run( robo() )  # Essa linha chama o robô na nova thread, permitindo o comportamento assíncrono.
+
+    # Criação da thread
+    thread = threading.Thread(target=run_robo)
+    thread.start()
+    print("Thread do robô iniciada!")

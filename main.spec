@@ -6,10 +6,21 @@ import os
 import dotenv
 
 dotenv.load_dotenv()
+#todo: aqui
+dotenv.load_dotenv(dotenv_path="app_web/.env.app_web")
+
 ENV_BUILD_FOLDER = os.getenv("BUILD_FOLDER")
 ENV_EXE_NAME = os.getenv("EXE_NAME")
+#todo: aqui
+ENV_WEB_APP_BUNDLES = os.getenv("WEB_APP_BUNDLES")
+ENV_WEB_APP_BUNDLES_BUILD_FOLDER = os.getenv("WEB_APP_BUNDLES_BUILD_FOLDER")
 
 not_allowed_not_packagable_extensions = ( ".py" )
+#todo: aqui
+bundles_path = os.path.abspath(ENV_WEB_APP_BUNDLES)
+web_app_bundles = [
+    (bundles_path, ENV_WEB_APP_BUNDLES_BUILD_FOLDER)
+]
 
 binaries = [
     ("artifacts", "artifacts"),
@@ -24,8 +35,13 @@ data_not_packagable = [
 data_packagable = [
     ("pje/ng2/dev_menu_automacao.html", "pje/ng2"),
     ("pje/ng2/dev_menu_automacao.js", "pje/ng2"),
-    (".env", ".")
+    (".env", "."),
+#todo: aqui
+    *web_app_bundles
 ]
+#todo: aqui
+print(data_packagable)
+input("enter")
 
 
 def print_datas(datas, identificador=None):
@@ -73,7 +89,8 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    #todo: aqui
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
