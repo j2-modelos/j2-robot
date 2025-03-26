@@ -3,7 +3,7 @@ from pathlib import Path
 from string import Template
 from time import sleep
 
-from chatgpt.chatgpt import ChatGpt
+from ia.chatgpt import ChatGpt
 from core.web_driver_manager import WebDriverManager
 from fluxo.core.executor_tabela_decisao import ExecutorTabelaDecisao
 from fluxo.tarefas.classes.avaliacao_multi_selecao import AvaliarMultiSelecao
@@ -30,7 +30,7 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
     async def tarefa_esta_pronta(self):
         if self.esta_pronta:
             return
-        #carregar guia chatgpt ou reutilizar
+        #carregar guia ia ou reutilizar
         await super().tarefa_esta_pronta()
         self.chatgpt  = ChatGpt(drivermgr=self.drivermgr, guia_compartilhada=True)
         await self.chatgpt.init_async()
@@ -74,7 +74,7 @@ class AvaliarDeterminacoesDoMagistrado(AvaliarMultiSelecao, ExecutorTabelaDecisa
                 await  self._sinalizar_erro("CHAT GPT ERRO")
             raise e
 
-        print("A resposta do chatgpt foi:")
+        print("A resposta do ia foi:")
         print(resposta_json)
         await self.chatgpt.voltar_guia_invocadora()
         await  self.painel_lista.alternar_para_frame_tarefa()

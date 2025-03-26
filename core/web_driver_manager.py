@@ -36,9 +36,14 @@ class WebDriverManager:
         self.maximize_window = maximize_window
         self.driver: webdriver = None
         self.assistant: Assistant = None
+        self.web_driver_installation = None
         self.configure_options()
+        self.install_web_driver()
         self.start_driver()
         WebDriverManager.drivers_abertos.append(self)
+
+    def install_web_driver(self):
+        self.web_driver_installation = ChromeDriverManager().install()
 
     def configure_options(self):
         """
@@ -86,7 +91,9 @@ class WebDriverManager:
         options = self.configure_options()
 
         if self.driver_path:
-            service = Service(self.driver_path)
+
+            #service = Service(self.driver_path)
+            service = Service(self.web_driver_installation)
             self.driver = webdriver.Chrome(service=service, options=options)
         else:
             # Usando o WebDriver gerenciado automaticamente (chromedriver)

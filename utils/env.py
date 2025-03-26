@@ -14,6 +14,10 @@ envs = [
 for env_path, packaged in envs:
     dotenv.load_dotenv(get_resource_path(env_path, packaged))
 
+ENV_LOGIN_URL = os.getenv("LOGIN_URL")
+ENV_LOGIN_USUARIO = os.getenv("LOGIN_USUARIO")
+ENV_LOGIN_SENHA = os.getenv("LOGIN_SENHA")
+
 ENV_J2_EXTENSAO_VERSAO = os.getenv("J2_EXTENSAO_VERSAO")
 ENV_CHROME_DRIVER_PATH = os.getenv("CHROME_DRIVER_PATH")
 ENV_J2_EXTENSION_PATH = os.getenv("J2_EXTENSION_PATH")

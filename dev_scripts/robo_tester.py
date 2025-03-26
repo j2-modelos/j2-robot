@@ -1,7 +1,8 @@
 import asyncio
 from time import sleep
 
-from chatgpt.chatgpt import ChatGpt
+from ia.chatgpt import ChatGpt
+from ia.claude import Claude
 from core.web_driver_manager import WebDriverManager
 from dev_scripts.gerador_nome_tarefa import gerar_acao_judicial
 
@@ -14,12 +15,13 @@ async def robo():
             raise ValueError("Google Chrome não ficou pronto.")
 
         sleep(2)
-        chatgpt = ChatGpt(drivermgr=drivermgr, guia_compartilhada=True)
-        await  chatgpt.init_async()
+        # ia = ChatGpt(drivermgr=drivermgr, guia_compartilhada=True)
+        ia = Claude(drivermgr=drivermgr, guia_compartilhada=True)
+        await  ia.init_async()
 
         while True:
             titulo_chat = gerar_acao_judicial()
-            await chatgpt.iniciar_novo_chat(titulo_chat)
+            await ia.iniciar_novo_chat(titulo_chat)
 
             resposta = input("Digite 'sim' para sair do loop: ")
             if resposta.lower() == "sim":  # Garante que 'sim' seja insensível a maiúsculas/minúsculas

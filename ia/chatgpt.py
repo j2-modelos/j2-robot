@@ -14,7 +14,7 @@ from utils.strings import extract_uuid
 
 
 class ChatGpt:
-    guia_alias = 'chatgpt'
+    guia_alias = 'ia-gpt'
     chatgpt_url = "https://chatgpt.com/"
 
     def __init__(self,  drivermgr: WebDriverManager, guia_compartilhada = True):
@@ -63,13 +63,13 @@ class ChatGpt:
 
     async def aguardar_resposta(self, uuid_vinculada: str):
         """
-            Aguarda o chatgpt responder pela json identificada pela uuid enviada.
+            Aguarda o ia responder pela json identificada pela uuid enviada.
         :return:
         """
         asst = self.drivemgr.assistant
 
         async def race_routine():
-            elemento_esperado_locator = (By.XPATH, f"//span[contains(text(), '{uuid_vinculada}')]/..")
+            elemento_esperado_locator = (By.XPATH, f"//span[contains(text(), '{uuid_vinculada}')]/ancestor::code[1]")
             await asst.wait_for_element_exist(locator=elemento_esperado_locator, timeout=180)
             await asst.wait_for_and_state_controller(lambda d: asst.dom_util.extract_text_as_json_from_element(locator=elemento_esperado_locator), 180)
             asst.clicar_elemento(locator=elemento_esperado_locator)
@@ -98,7 +98,7 @@ class ChatGpt:
                 ob_url = await asst.obter_url_frame_ativo()
                 return url_atual != ob_url
 
-            new_chat_acao = await asst.wait_for_element_exist((By.XPATH, "//div[text()='ChatGPT']//following-sibling::*//button"), timeout=60)
+            new_chat_acao = await asst.wait_for_element_exist((By.XPATH, "//nav//button[@aria-label='Novo chat']"), timeout=60)
             asst.clicar_elemento(new_chat_acao)
             await asst.wait_for_async(esperar_mudar_url)
             #text_area = await assistant.wait_for_element_visible(css_selector="#prompt-textarea", timeout=60)
@@ -114,8 +114,12 @@ class ChatGpt:
 
             if titulo_chat:
                 url_atual = await asst.obter_url_frame_ativo()
-                menu_activator = await asst.wait_for_element_visible(locator=(By.XPATH, f"//nav//a[contains(@href, '{extract_uuid(url_atual)}')]/..//button"))
+                menu_activator = await asst.wait_for_element_exist(locator=(By.XPATH, f"//nav//a[contains(@href, '{extract_uuid(url_atual)}')]"))
                 asst.clicar_elemento(menu_activator)
+                menu_activator = await asst.wait_for_element_exist(
+                    locator=(By.XPATH, f"//nav//a[contains(@href, '{extract_uuid(url_atual)}')]/following-sibling::*[1]//button"))
+                asst.clicar_elemento(menu_activator)
+
                 comando_renomear = await asst.wait_for_element_visible(locator=(By.XPATH, "//div[contains(text(),'Renomear')]"))
                 asst.clicar_elemento(comando_renomear)
                 input_chat_name = await asst.wait_for_element_visible(

@@ -9,6 +9,7 @@ from core.web_driver_manager import WebDriverManager
 from pje.login import  Login
 from pje.ng2.dev import Dev
 from pje.publico.usuario.token import Token
+from utils.env import ENV_LOGIN_URL, ENV_LOGIN_USUARIO, ENV_LOGIN_SENHA
 
 
 async def robo():
@@ -18,7 +19,7 @@ async def robo():
         if not estaPronto:
             raise ValueError("Google Chrome não ficou pronto.")
 
-        Login(drivermgr).logarUsarioSenha("https://pje.tjma.jus.br/pje/login.seam", username="00641805306", password="a1420f5F5")
+        Login(drivermgr).logarUsarioSenha(ENV_LOGIN_URL, username=ENV_LOGIN_USUARIO, password=ENV_LOGIN_SENHA)
         await Token(drivermgr).esperar_insercao_token()
         await Dev(drivermgr).esperar_comando_usuario()
 

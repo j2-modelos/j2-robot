@@ -1,0 +1,17 @@
+selenium
+webdriver-manager
+flask
+python-dotenv
+invoke
+pyinstaller
+websockets
+psutil
+pycparser
+pynput
+openpyxl
+pandas
+pytest
+flake8
+asyncio
+pathlib 
+pystray
